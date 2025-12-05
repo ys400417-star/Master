@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Delivery Master V56.8</title>
+    <title>Delivery Master V56.9 (Big Data)</title>
     
     <link rel="manifest" href='data:application/manifest+json,{"name":"배달마스터","short_name":"배달마스터","start_url":".","display":"standalone","background_color":"#09090b","theme_color":"#09090b","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/726/726455.png","sizes":"512x512","type":"image/png"}]}'>
     <meta name="mobile-web-app-capable" content="yes">
@@ -52,7 +52,8 @@
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
         .combat-mode { border: 2px solid rgba(239, 68, 68, 0.6); animation: pulse-red 2s infinite; }
         @keyframes pulse-red { 0% { border-color: rgba(239, 68, 68, 0.6); } 50% { border-color: rgba(239, 68, 68, 1); } 100% { border-color: rgba(239, 68, 68, 0.6); } }
-        input[type="time"]::-webkit-calendar-picker-indicator, input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         .offline-banner { display:none; position:fixed; top:0; left:0; right:0; height:4px; background:red; z-index:99999; }
     </style>
@@ -70,7 +71,7 @@
             <div class="mb-4"><label class="text-xs text-gray-400 font-bold mb-1 block">날짜</label><input type="date" id="archDate" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 text-white font-bold text-center"></div>
             <div class="grid grid-cols-2 gap-3 mb-4"><div><label class="text-xs text-gray-400 font-bold mb-1 block">총 건수</label><input type="tel" id="archCount" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 text-white text-lg font-bold text-center"></div><div><label class="text-xs text-gray-400 font-bold mb-1 block">총 수입</label><input type="tel" id="archInc" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 text-white text-lg font-bold text-center"></div></div>
             <div class="bg-gray-900 p-3 rounded-xl border border-gray-700 mb-4 flex-1 overflow-y-auto"><h4 class="text-xs font-bold text-primary mb-2"><i class="fas fa-plus-circle mr-1"></i>일괄 추가</h4><div class="flex gap-2 mb-2"><input type="tel" id="bulkCount" class="flex-1 bg-black border border-gray-600 rounded p-2 text-white text-center" placeholder="건수"><input type="tel" id="bulkAmount" class="flex-[2] bg-black border border-gray-600 rounded p-2 text-white text-center" placeholder="금액"></div><button onclick="applyBulkAdd()" class="w-full bg-gray-800 border border-gray-600 text-white font-bold py-2 rounded hover:bg-gray-700">합산하기</button></div>
-            <div class="flex gap-3 mt-auto"><button onclick="deleteArchive()" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 active:bg-red-700">삭제</button><button onclick="saveArchive()" class="flex-[2] py-3 rounded-xl font-bold text-black bg-primary">저장</button></div>
+            <div class="flex gap-3 mt-auto"><button onclick="deleteArchive()" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 active:bg-red-700">삭제</button><button onclick="saveArchive()" class="flex-[2] py-3 rounded-xl font-bold text-black bg-primary active:bg-orange-600 shadow-lg">저장</button></div>
         </div>
     </div>
 
@@ -114,16 +115,13 @@
             <div class="bg-gray-900 p-3 rounded-xl mb-4 border border-gray-800">
                 <div class="text-xs text-primary font-bold mb-2">미션 등록 (날짜/시간)</div>
                 <div class="flex gap-2 mb-2"><input type="tel" id="newMsnTgt" class="flex-1 bg-[#27272a] rounded-lg px-3 py-2 text-white text-xs border border-gray-700" placeholder="목표 건수"><input type="tel" id="newMsnRwd" class="flex-1 bg-[#27272a] rounded-lg px-3 py-2 text-white text-xs border border-gray-700" placeholder="보상금"></div>
-                <div class="flex gap-2 items-center mb-2">
-                    <input type="date" id="newMsnDate" class="flex-[1.5] bg-[#27272a] rounded-lg px-2 py-2 text-white text-xs border border-gray-700">
-                    <span class="text-gray-500 text-xs">의</span>
-                </div>
                 <div class="flex gap-2 items-center mb-1">
                     <input type="time" id="newMsnStart" class="flex-1 bg-[#27272a] rounded-lg px-2 py-2 text-white text-xs border border-gray-700 text-center">
                     <span class="text-gray-500">~</span>
                     <input type="time" id="newMsnEnd" class="flex-1 bg-[#27272a] rounded-lg px-2 py-2 text-white text-xs border border-gray-700 text-center">
                     <button onclick="addMission()" class="bg-primary text-black font-bold rounded-lg px-4 py-2 text-xs active:scale-95">등록</button>
                 </div>
+                <div class="mb-2"><input type="date" id="newMsnDate" class="w-full bg-[#27272a] rounded-lg px-3 py-2 text-white text-xs border border-gray-700 text-center"></div>
             </div>
             <div class="flex-1 overflow-y-auto mb-4 pr-1">
                 <div class="text-xs font-bold text-gray-500 mb-2">진행 중</div><div id="activeMissionList" class="space-y-2 mb-6"></div>
@@ -135,7 +133,7 @@
     <header class="glass w-full px-5 py-3 shadow-lg shrink-0 z-50 pt-[calc(env(safe-area-inset-top)+12px)]">
         <div class="flex justify-between items-center mb-2">
             <h1 class="text-xl font-black italic tracking-tighter flex items-center select-none text-white" onclick="openDataDoctor()">
-                <i class="fas fa-cube text-primary mr-2"></i>MASTER <span class="text-xs font-normal text-muted ml-1 not-italic">V56.8</span>
+                <i class="fas fa-cube text-primary mr-2"></i>MASTER <span class="text-xs font-normal text-muted ml-1 not-italic">V56.9</span>
             </h1>
             <div class="flex gap-2">
                 <button onclick="openMissionModal()" class="h-8 px-3 text-xs font-bold border border-secondary rounded-lg text-muted hover:text-white flex items-center"><i class="fas fa-flag-checkered mr-1"></i><span id="missionBtnTxt">미션</span></button>
@@ -217,7 +215,7 @@
     </nav>
 
 <script>
-    const KEY = 'masterV56_8'; 
+    const KEY = 'masterV56_9'; 
     const DEFAULT_DATA = { date: new Date().toDateString(), logs: [], arch: [], slots: [0,0,0,0,0,0], slotTs: [0,0,0,0,0,0], missions: [], doneMissions: [], dist: 0, path: [], run: {on:false, start:null, goal:150000, tCnt:40, tTime:"21:00"} };
     let d = JSON.parse(JSON.stringify(DEFAULT_DATA));
     let map, poly, activeSlot=null, selW='sun', timerInt=null, watchId=null, curPos = {lat:null, lng:null};
@@ -251,10 +249,11 @@
         const saved = localStorage.getItem(KEY);
         if(saved) { try { d = { ...DEFAULT_DATA, ...JSON.parse(saved) }; } catch(e) {} } 
         else { 
-            const old = localStorage.getItem('masterV56_7') || localStorage.getItem('masterV56_2');
+            const old = localStorage.getItem('masterV56_8') || localStorage.getItem('masterV56_7') || localStorage.getItem('masterV56_6');
             if(old) { try { d = { ...d, ...JSON.parse(old) }; save(); } catch(e){} }
         }
         if(!Array.isArray(d.missions)) d.missions = []; if(!Array.isArray(d.doneMissions)) d.doneMissions = [];
+        if(!Array.isArray(d.slotTs)) d.slotTs = [0,0,0,0,0,0];
         
         checkDate(); render(); 
         if(d.run.on) startTimer(); 
@@ -271,7 +270,7 @@
     function closeDoctorModal() { $('doctorModal').classList.remove('show'); }
     function scanForBackups() {
         const list = $('recoveryList'); list.innerHTML = "";
-        const keys = ['masterV56_7', 'masterV56_6', 'masterV56_2', 'masterV56', 'masterV55_7'];
+        const keys = ['masterV56_8', 'masterV56_7', 'masterV56_6', 'masterV56_5'];
         keys.forEach(k => {
             const data = localStorage.getItem(k);
             if(data) { try { const json = JSON.parse(data); const cnt = json.logs ? json.logs.filter(l=>typeof l.s==='number').length : 0; list.innerHTML += `<div class="flex justify-between items-center bg-black p-2 rounded border border-gray-700"><div><div class="text-primary font-bold">${k}</div><div class="text-gray-400">${json.date || '?'} / ${cnt}건</div></div><button onclick="recoverFromKey('${k}')" class="bg-gray-700 px-2 py-1 rounded text-white font-bold">복원</button></div>`; } catch(e){} }
@@ -327,7 +326,7 @@
     let pressTimer = null, isLongPress = false;
     function handleSlotStart(i) { isLongPress = false; pressTimer = setTimeout(() => { isLongPress = true; if(d.slots[i] !== 0) { d.slots[i] = 0; d.slotTs[i] = 0; save(); render(); navigator.vibrate?.(50); toast(`슬롯 ${i+1} 초기화`); } }, 500); }
     
-    // [V56.8] Simplified Touch Logic (Remove Action Modal)
+    // [V56.8] Simplified Touch Logic
     function handleSlotEnd(i) { 
         if(pressTimer) clearTimeout(pressTimer); 
         if(!isLongPress) { 
@@ -335,11 +334,8 @@
                 d.slots[i]=1; d.slotTs[i] = Date.now(); 
                 toast(`슬롯 ${i+1}: 픽업`); save(); render(); 
             } 
-            else if(d.slots[i]===1) { 
-                d.slots[i]=2; // Direct Jump 1->2
-                save(); render(); 
-            } 
-            else if(d.slots[i]===2) { openCreateModal(i); } 
+            else if(d.slots[i]===1) { d.slots[i]=2; save(); render(); } // Direct Jump 1->2
+            else if(d.slots[i]===2) { openCreateModal(i); } // 2 -> Modal
         } 
     }
 
@@ -358,7 +354,11 @@
         const idx = parseInt($('archIdx').value); const dateVal = $('archDate').value; const cnt = parseInt($('archCount').value); const inc = parseInt($('archInc').value);
         if(!dateVal || isNaN(cnt) || isNaN(inc)) return alert("값 확인");
         const dateStr = new Date(dateVal).toDateString();
-        if (idx === -1) { d.arch.push({date: dateStr, count: cnt, inc: inc, dst: 0}); toast("생성됨"); }
+        // V56.9 Fix: Save full details logic placeholder. For manual, we save minimal detail
+        const minimalLog = { id: Date.now(), time: "수기입력", ts: new Date(dateVal).getTime(), amt: 0, s: 999 }; 
+        // Note: Manual archive editing doesn't invent fake logs for performance, just summary.
+        
+        if (idx === -1) { d.arch.push({date: dateStr, count: cnt, inc: inc, dst: 0, logs: [minimalLog]}); toast("생성됨"); }
         else { d.arch[idx].date = dateStr; d.arch[idx].count = cnt; d.arch[idx].inc = inc; toast("수정됨"); }
         d.arch.sort((a,b) => new Date(a.date) - new Date(b.date)); save(); render(); closeArchiveModal();
     }
@@ -373,9 +373,8 @@
 
     function closeModal() { $('completeModal').classList.remove('show'); $('modalAmount').blur(); }
     function submitComplete() { 
-        const amt=parseInt($('modalAmount').value)||parseInt($('modalAmount').placeholder)||0; const timeStr=$('modalTime').value; const logId=$('editLogId').value; const archIdx=$('editArchIdx').value; 
+        const amt=parseInt($('modalAmount').value)||parseInt($('modalAmount').placeholder)||0; const timeStr=$('modalTime').value; const logId=$('editLogId').value; 
         if(logId) { const idx=d.logs.findIndex(l=>l.id==logId); if(idx!==-1) { d.logs[idx].amt=amt; d.logs[idx].time=timeStr; const [h,m]=timeStr.split(':'); const dt=new Date(d.logs[idx].ts); dt.setHours(h,m); d.logs[idx].ts=dt.getTime(); toast("수정됨"); } }
-        else if(archIdx!=="") { d.arch[archIdx].inc=amt; const c=prompt("건수 수정",d.arch[archIdx].count); if(c) d.arch[archIdx].count=parseInt(c); toast("수정됨"); }
         else { 
             const now=new Date(); const [h,m]=timeStr.split(':'); now.setHours(h,m); 
             const dispatchTs = d.slotTs[activeSlot] || now.getTime(); 
@@ -385,7 +384,7 @@
         }
         closeModal(); save(); render(); 
     }
-    function deleteEntry() { if(!confirm("삭제?"))return; const logId=$('editLogId').value; const archIdx=$('editArchIdx').value; if(logId) d.logs=d.logs.filter(l=>l.id!=logId); toast("삭제됨"); closeModal(); save(); render(); }
+    function deleteEntry() { if(!confirm("삭제?"))return; const logId=$('editLogId').value; if(logId) d.logs=d.logs.filter(l=>l.id!=logId); toast("삭제됨"); closeModal(); save(); render(); }
 
     function openMissionModal() { $('missionModal').classList.add('show'); renderMissionList(); }
     function closeMissionModal() { $('missionModal').classList.remove('show'); }
@@ -402,8 +401,10 @@
         const baseDate = dateVal ? new Date(dateVal) : new Date();
         const baseDateStr = baseDate.toDateString();
         
-        const startTs = new Date(baseDateStr + ' ' + sTime).getTime();
-        let endTs = new Date(baseDateStr + ' ' + eTime).getTime();
+        // Parse time strings
+        const startTs = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), parseInt(sTime.split(':')[0]), parseInt(sTime.split(':')[1])).getTime();
+        let endTs = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), parseInt(eTime.split(':')[0]), parseInt(eTime.split(':')[1])).getTime();
+        
         if(endTs < startTs) endTs += 86400000;
         
         d.missions.push({id: Date.now(), tgt: tgt, rwd: rwd, startTs: startTs, endTs: endTs, sStr: sTime, eStr: eTime, dateStr: baseDateStr}); 
@@ -413,20 +414,38 @@
     }
     function removeMission(id) { if(confirm("삭제?")) { d.missions=d.missions.filter(m=>m.id!==id); save(); renderMissionList(); updateMissionUI(); } }
     
+    // [V56.9] Improved Mission Logic: Check both Today's logs AND Archive logs for the mission date
     function getMissionProgress(m) { 
-        let c=0;
+        let c = 0;
+        
+        // 1. Check Today's logs (if today is mission date)
         d.logs.forEach(l => {
             const checkTime = l.dispatchTs || l.ts;
             const isLog = typeof l.s==='number' || l.s===999;
             if(isLog && checkTime >= m.startTs && checkTime <= m.endTs) c++;
         });
+
+        // 2. Check Archive (if mission was in past)
+        if (d.arch) {
+            d.arch.forEach(a => {
+                if(a.logs && Array.isArray(a.logs)) {
+                    a.logs.forEach(l => {
+                        const checkTime = l.dispatchTs || l.ts;
+                        const isLog = typeof l.s==='number' || l.s===999;
+                        if(isLog && checkTime >= m.startTs && checkTime <= m.endTs) c++;
+                    });
+                }
+            });
+        }
+        
+        // 3. Check Active Slots (only relevant if today)
         d.slots.forEach((s, i) => {
              if(s > 0 && d.slotTs[i] >= m.startTs && d.slotTs[i] <= m.endTs) c++;
         });
         return c; 
     }
 
-    function renderMissionList() { const act=$('activeMissionList'); const done=$('doneMissionList'); act.innerHTML=d.missions.length?'':'<div class="text-gray-600 text-xs">없음</div>'; d.missions.forEach(m=>{ const p=getMissionProgress(m); const timeLabel = `${m.sStr}~${m.eStr}`; act.innerHTML+=`<div class="flex justify-between items-center bg-[#27272a] p-3 rounded-lg border border-gray-700"><div class="flex flex-col"><div class="flex items-center"><span class="text-primary font-bold text-sm mr-1">${m.tgt}건</span><span class="bg-blue-900 text-blue-300 text-[9px] px-1 rounded ml-1">${timeLabel}</span></div><span class="text-gray-500 text-[10px]">진행: ${p}건</span></div><div class="flex items-center gap-3"><span class="text-white font-bold text-sm">+${m.rwd.toLocaleString()}</span><button onclick="removeMission(${m.id})" class="text-red-500 text-xs p-1"><i class="fas fa-trash"></i></button></div></div>`; }); done.innerHTML=d.doneMissions.length?'':'<div class="text-gray-600 text-xs">없음</div>'; d.doneMissions.forEach(m=>{ done.innerHTML+=`<div class="flex justify-between items-center bg-green-900/20 p-3 rounded-lg border border-green-900/50"><div class="text-green-500 font-bold text-xs"><i class="fas fa-check mr-1"></i>${m.tgt}건 달성</div><div class="text-white font-bold text-xs">+${m.rwd.toLocaleString()}원</div></div>`; }); }
+    function renderMissionList() { const act=$('activeMissionList'); const done=$('doneMissionList'); act.innerHTML=d.missions.length?'':'<div class="text-gray-600 text-xs">없음</div>'; d.missions.forEach(m=>{ const p=getMissionProgress(m); const timeLabel = `${m.dateStr ? m.dateStr.slice(4,10) : ''} ${m.sStr}~${m.eStr}`; act.innerHTML+=`<div class="flex justify-between items-center bg-[#27272a] p-3 rounded-lg border border-gray-700"><div class="flex flex-col"><div class="flex items-center"><span class="text-primary font-bold text-sm mr-1">${m.tgt}건</span><span class="bg-blue-900 text-blue-300 text-[9px] px-1 rounded ml-1">${timeLabel}</span></div><span class="text-gray-500 text-[10px]">진행: ${p}건</span></div><div class="flex items-center gap-3"><span class="text-white font-bold text-sm">+${m.rwd.toLocaleString()}</span><button onclick="removeMission(${m.id})" class="text-red-500 text-xs p-1"><i class="fas fa-trash"></i></button></div></div>`; }); done.innerHTML=d.doneMissions.length?'':'<div class="text-gray-600 text-xs">없음</div>'; d.doneMissions.forEach(m=>{ done.innerHTML+=`<div class="flex justify-between items-center bg-green-900/20 p-3 rounded-lg border border-green-900/50"><div class="text-green-500 font-bold text-xs"><i class="fas fa-check mr-1"></i>${m.tgt}건 달성</div><div class="text-white font-bold text-xs">+${m.rwd.toLocaleString()}원</div></div>`; }); }
     function checkMsn() { const ach=[], rem=[]; d.missions.forEach(m=>{ const curCnt = getMissionProgress(m); if(curCnt >= m.tgt) ach.push(m); else rem.push(m); }); if(ach.length>0) { ach.forEach(m=>{ d.logs.unshift({id:Date.now(),time:"미션성공",ts:Date.now(),amt:m.rwd,s:'🎁',isBonus:true}); d.doneMissions.unshift({tgt:m.tgt,rwd:m.rwd,ts:Date.now()}); toast(`🎉 ${m.tgt}건 달성! +${m.rwd}`); }); d.missions=rem; save(); renderMissionList(); } updateMissionUI(); }
     function updateMissionUI() { const box=$('missionBox'); if(d.missions.length===0) { box.classList.add('hidden'); setText('missionBtnTxt','미션'); return; } box.classList.remove('hidden'); setText('missionBtnTxt','진행중'); box.innerHTML=''; d.missions.forEach(m=>{ const p=getMissionProgress(m); const pct=Math.min(100,(p/m.tgt)*100); const l=`${m.sStr}~${m.eStr}`; box.innerHTML+=`<div class="mb-1"><div class="flex justify-between text-[9px] text-gray-400 mb-0.5 px-1"><span>${l} <b class="text-white">${m.tgt}</b>건</span><span>${p}/${m.tgt}</span></div><div class="h-1.5 bg-secondary rounded-full overflow-hidden border border-white/5 relative"><div class="h-full bg-gradient-to-r from-orange-500 to-yellow-500" style="width:${pct}%"></div></div></div>`; }); }
 
@@ -439,42 +458,47 @@
         const inc=rL.reduce((a,b)=>a+(b.amt||0),0); 
         setText('insAvg',rL.length>0?Math.round(inc/rL.length).toLocaleString():0); 
         
-        // Golden Time
-        const hInc = {};
-        if (rL.length > 0) {
-             rL.forEach(l=>{ 
-                const h=new Date(l.ts).getHours(); 
-                if(!hInc[h]) hInc[h] = 0;
-                hInc[h] += (l.amt || 0);
-            });
-            let goldTime = "-", maxHInc = 0;
-            for(const [h, val] of Object.entries(hInc)) {
-                if(val > maxHInc) { maxHInc = val; goldTime = h + "시"; }
-            }
-            setText('recTime', goldTime);
-        } else { setText('recTime', '-'); }
+        // 1. Gather ALL logs (Today + Archive)
+        let allLogs = [...rL];
+        d.arch.forEach(a => { if(a.logs) allLogs = allLogs.concat(a.logs); });
 
-        // Best Day (Archive + Today)
+        // Golden Time (All Time)
+        const hInc = {};
+        allLogs.forEach(l=>{ 
+            const h=new Date(l.ts).getHours(); 
+            if(!hInc[h]) hInc[h] = 0;
+            hInc[h] += (l.amt || 0);
+        });
+        let goldTime = "-", maxHInc = 0;
+        for(const [h, val] of Object.entries(hInc)) {
+            if(val > maxHInc) { maxHInc = val; goldTime = h + "시"; }
+        }
+        setText('recTime', goldTime);
+
+        // Best Day (All Time)
         const dStats = {};
+        // Initialize days
+        for(let i=0; i<7; i++) dStats[i] = {sum:0, cnt:0};
+        
+        // From Archive Summaries
         d.arch.forEach(a=>{ 
             const dy=new Date(a.date).getDay(); 
-            if(!dStats[dy]) dStats[dy]={sum:0, cnt:0}; 
             dStats[dy].sum += a.inc; dStats[dy].cnt += 1; 
         }); 
+        // From Today
         if (inc > 0) {
             const todayIdx = new Date().getDay();
-            if(!dStats[todayIdx]) dStats[todayIdx]={sum:0, cnt:0};
             dStats[todayIdx].sum += inc; dStats[todayIdx].cnt += 1;
         }
 
         let bDay="-", maxD=0;
         for(let i=0;i<7;i++){ 
-            if(dStats[i] && dStats[i].cnt>0) {
+            if(dStats[i].cnt>0) {
                 const avg = dStats[i].sum / dStats[i].cnt;
                 if(avg > maxD) { maxD=avg; bDay=['일','월','화','수','목','금','토'][i]+"요일"; }
             }
         }
-        if(bDay==='-' && inc > 0) bDay = "오늘"; // Fallback
+        if(bDay==='-' && inc > 0) bDay = "오늘"; 
         
         setText('recDay', bDay);
         $('aiCoachMsg').innerHTML = (bDay!=="-") ? `사장님, <b>${bDay}</b> 수익이 최고입니다!` : "데이터 수집 중...";
@@ -483,9 +507,13 @@
         if(hList) { 
             hList.innerHTML=''; 
             const grp = {}; 
+            // Only show TODAY's hour stats in list
             rL.forEach(l=>{ const h=new Date(l.ts).getHours(); if(!grp[h])grp[h]={c:0}; grp[h].c++; });
-            Object.keys(hInc).sort((a,b)=>b-a).forEach(h=>{ 
-                hList.innerHTML+=`<div class="flex justify-between border-b border-gray-700 py-2"><span class="text-gray-400 font-mono text-xs w-10">${h}시</span><div class="flex gap-4"><span class="text-primary font-bold">${grp[h]?.c||0}건</span><span class="text-white w-16 text-right font-bold">${hInc[h].toLocaleString()}</span></div></div>`; 
+            Object.keys(grp).sort((a,b)=>b-a).forEach(h=>{ 
+                // Show Today's count vs All-time avg income? No, just today's stats
+                // To show all-time income for that hour:
+                const allTimeIncome = hInc[h] || 0;
+                hList.innerHTML+=`<div class="flex justify-between border-b border-gray-700 py-2"><span class="text-gray-400 font-mono text-xs w-10">${h}시</span><div class="flex gap-4"><span class="text-primary font-bold">${grp[h]?.c||0}건</span><span class="text-white w-16 text-right font-bold">${(d.logs.filter(l=>new Date(l.ts).getHours()==h).reduce((a,b)=>a+b.amt,0)).toLocaleString()}</span></div></div>`; 
             }); 
         } 
         
@@ -520,10 +548,47 @@
     function initMap() { if(map)return; map=L.map('map',{zoomControl:false,attributionControl:false}).setView([37.5665,126.9780],13); L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{maxZoom:20}).addTo(map); poly=L.polyline([],{color:'#f97316',weight:5,opacity:0.8}).addTo(map); if(d.path.length){ poly.setLatLngs(d.path); d.path.forEach(p=>L.circleMarker(p,{color:'#f97316',fillColor:'#f97316',radius:3,stroke:false,fillOpacity:0.5}).addTo(map)); if(d.path.length>1)map.fitBounds(poly.getBounds()); } }
     function startGPS() { if(!navigator.geolocation)return toast("GPS불가"); if(watchId)navigator.geolocation.clearWatch(watchId); const opt={enableHighAccuracy:true,maximumAge:0,timeout:15000}; watchId=navigator.geolocation.watchPosition(p=>{ const {latitude:lat,longitude:lng}=p.coords; curPos={lat,lng}; if(!map)initMap(); setText('weatherStatus',"GPS연결"); if(d.path.length>0){ const last=d.path[d.path.length-1]; const dist=6371*2*Math.atan2(Math.sqrt(Math.sin((lat-last[0])*Math.PI/360)**2+Math.cos(last[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin((lng-last[1])*Math.PI/360)**2),Math.sqrt(1-(Math.sin((lat-last[0])*Math.PI/360)**2+Math.cos(last[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin((lng-last[1])*Math.PI/360)**2))); if(dist>0.02){ d.dist+=dist; d.path.push([lat,lng]); poly.setLatLngs(d.path); L.circleMarker([lat,lng],{color:'#f97316',fillColor:'#f97316',radius:3,stroke:false,fillOpacity:0.5}).addTo(map); save(); } }else{ d.path.push([lat,lng]); } setText('uiDist',d.dist.toFixed(1)); }, e=>{ setText('weatherStatus',"GPS신호약함"); }, opt); }
     function recenterMap() { if(map&&curPos.lat){ map.setView([curPos.lat,curPos.lng],16); }else toast("GPS확인중"); }
-    function checkDate() { if(d.date!==new Date().toDateString()){ const rL=d.logs.filter(l=>typeof l.s==='number'); if(rL.length>0)d.arch.push({date:d.date,count:rL.length,inc:d.logs.reduce((a,b)=>a+b.amt,0),dst:d.dist}); d.date=new Date().toDateString(); d.logs=[]; d.slots=[0,0,0,0,0,0]; d.dist=0; d.path=[]; d.doneMissions=[]; d.run.on=false; save(); render(); } }
-    function resetDay() { if(confirm("오늘 기록 마감?")) { d.date="RESET"; checkDate(); } }
+    
+    // [V56.9 Fix] Archive Full Logs Logic
+    function checkDate() { 
+        const today = new Date().toDateString(); 
+        if(d.date !== today) { 
+            const realLogs = d.logs.filter(l=>typeof l.s==='number'); 
+            if(realLogs.length>0) {
+                // Save Full Logs to Archive
+                d.arch.push({
+                    date:d.date, 
+                    count:realLogs.length, 
+                    inc:d.logs.reduce((a,b)=>a+b.amt,0), 
+                    dst:d.dist,
+                    logs: [...d.logs] // Save Copy
+                }); 
+            }
+            d.date = today; d.logs=[]; d.slots=[0,0,0,0,0,0]; d.dist=0; d.path=[]; d.doneMissions=[]; d.run.on=false; 
+            const now = new Date(); 
+            d.missions = d.missions.filter(m => { if(!m.date) return false; return new Date(m.date) >= now; }); 
+            if(map) { map.remove(); map=null; } setTimeout(initMap,500); save(); render(); 
+        } 
+    }
+    function resetDay() { 
+        if(confirm("마감?")) { 
+            const realLogs = d.logs.filter(l=>typeof l.s==='number'); 
+            if(realLogs.length>0) {
+                d.arch.push({
+                    date:d.date, 
+                    count:realLogs.length, 
+                    inc:d.logs.reduce((a,b)=>a+b.amt,0), 
+                    dst:d.dist,
+                    logs: [...d.logs]
+                }); 
+            }
+            d.date="RESET"; // Trigger checkDate next load or immediate? No, keep logic simple
+            d.date = new Date().toDateString();
+            d.logs=[]; d.slots=[0,0,0,0,0,0]; d.dist=0; d.path=[]; d.doneMissions=[]; d.run.on=false;
+            save(); render(); 
+        } 
+    }
     function backup() { const a=document.createElement('a'); a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(d)); a.download="Backup.json"; a.click(); }
-    function copyBackup() { const json = JSON.stringify(d); try { navigator.clipboard.writeText(json).then(() => { alert("복사완료!"); }); } catch (e) { alert("복사 실패"); } }
     function restore() { $('fileInput').click(); }
     function loadBackupFile(inp) { const f=inp.files[0]; if(f){ const r=new FileReader(); r.onload=e=>{ if(confirm("복구?")){ d=JSON.parse(e.target.result); save(); location.reload(); }}; r.readAsText(f); } }
     function go(n) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); $('p'+n).classList.add('active'); document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('nav-active')); $('n'+n).classList.add('nav-active'); if(n===3&&map){ setTimeout(()=>map.invalidateSize(),200); recenterMap(); } }
