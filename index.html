@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Delivery Master V56.6</title>
+    <title>Delivery Master V56.7</title>
     
     <link rel="manifest" href='data:application/manifest+json,{"name":"배달마스터","short_name":"배달마스터","start_url":".","display":"standalone","background_color":"#09090b","theme_color":"#09090b","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/726/726455.png","sizes":"512x512","type":"image/png"}]}'>
     <meta name="mobile-web-app-capable" content="yes">
@@ -70,8 +70,8 @@
             <input type="hidden" id="archIdx" value="-1">
             <div class="mb-4"><label class="text-xs text-gray-400 font-bold mb-1 block">날짜</label><input type="date" id="archDate" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 text-white font-bold text-center"></div>
             <div class="grid grid-cols-2 gap-3 mb-4"><div><label class="text-xs text-gray-400 font-bold mb-1 block">총 건수</label><input type="tel" id="archCount" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 text-white text-lg font-bold text-center"></div><div><label class="text-xs text-gray-400 font-bold mb-1 block">총 수입</label><input type="tel" id="archInc" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 text-white text-lg font-bold text-center"></div></div>
-            <div class="bg-gray-900 p-3 rounded-xl border border-gray-700 mb-4 flex-1 overflow-y-auto"><h4 class="text-xs font-bold text-primary mb-2"><i class="fas fa-plus-circle mr-1"></i>일괄 추가</h4><div class="flex gap-2 mb-2"><input type="tel" id="bulkCount" class="flex-1 bg-black border border-gray-600 rounded p-2 text-white text-center" placeholder="건수"><input type="tel" id="bulkAmount" class="flex-[2] bg-black border border-gray-600 rounded p-2 text-white text-center" placeholder="금액"></div><button onclick="applyBulkAdd()" class="w-full bg-gray-800 border border-gray-600 text-white font-bold py-2 rounded hover:bg-gray-700">합산</button></div>
-            <div class="flex gap-3 mt-auto"><button onclick="deleteArchive()" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 active:bg-red-700">삭제</button><button onclick="saveArchive()" class="flex-[2] py-3 rounded-xl font-bold text-black bg-primary active:bg-orange-600 shadow-lg">저장</button></div>
+            <div class="bg-gray-900 p-3 rounded-xl border border-gray-700 mb-4 flex-1 overflow-y-auto"><h4 class="text-xs font-bold text-primary mb-2"><i class="fas fa-plus-circle mr-1"></i>일괄 추가</h4><div class="flex gap-2 mb-2"><input type="tel" id="bulkCount" class="flex-1 bg-black border border-gray-600 rounded p-2 text-white text-center" placeholder="건수"><input type="tel" id="bulkAmount" class="flex-[2] bg-black border border-gray-600 rounded p-2 text-white text-center" placeholder="금액"></div><button onclick="applyBulkAdd()" class="w-full bg-gray-800 border border-gray-600 text-white font-bold py-2 rounded hover:bg-gray-700">합산하기</button></div>
+            <div class="flex gap-3 mt-auto"><button onclick="deleteArchive()" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-600">삭제</button><button onclick="saveArchive()" class="flex-[2] py-3 rounded-xl font-bold text-black bg-primary">저장</button></div>
         </div>
     </div>
 
@@ -82,15 +82,6 @@
                 <div class="bg-gray-900 p-3 rounded-xl border border-gray-700"><h4 class="text-sm font-bold text-white mb-2">기록 복구</h4><div id="recoveryList" class="space-y-2 text-xs"></div></div>
                 <div class="bg-gray-900 p-3 rounded-xl border border-gray-700"><h4 class="text-sm font-bold text-white mb-2">수동 보정</h4><div class="flex gap-2 mb-2"><input type="tel" id="fixCount" class="flex-1 bg-black border border-gray-600 rounded p-2 text-white" placeholder="건수"><input type="tel" id="fixAmount" class="flex-1 bg-black border border-gray-600 rounded p-2 text-white" placeholder="금액"></div><button onclick="addManualFix()" class="w-full bg-blue-600 text-white font-bold py-2 rounded">강제 추가</button></div>
             </div>
-        </div>
-    </div>
-
-    <div id="actionModal" class="modal-overlay">
-        <div class="bg-[#18181b] w-[85%] max-w-xs rounded-2xl border border-gray-800 p-5 shadow-2xl flex flex-col gap-3">
-            <h3 class="text-center text-white font-bold mb-2">상태 변경</h3>
-            <button onclick="confirmPickup()" class="bg-primary text-black font-bold py-3 rounded-xl shadow-lg active:scale-95">🚀 배달 출발</button>
-            <button onclick="cancelPickup()" class="bg-gray-800 text-red-500 font-bold py-3 rounded-xl border border-gray-700 active:bg-gray-700">↩ 대기 복귀</button>
-            <button onclick="closeActionModal()" class="text-gray-500 text-xs py-2 mt-1">닫기</button>
         </div>
     </div>
 
@@ -120,14 +111,15 @@
 
     <div id="missionModal" class="modal-overlay">
         <div class="bg-[#18181b] w-full max-w-sm rounded-2xl border border-gray-800 p-5 shadow-2xl h-[85vh] flex flex-col">
-            <h3 class="text-lg font-bold text-white mb-4 flex justify-between items-center"><span>미션 센터</span><button onclick="closeMissionModal()" class="text-gray-500"><i class="fas fa-times"></i></button></h3>
+            <h3 class="text-lg font-bold text-white mb-4 flex justify-between items-center"><span>미션 센터 (타임 어택)</span><button onclick="closeMissionModal()" class="text-gray-500"><i class="fas fa-times"></i></button></h3>
             <div class="bg-gray-900 p-3 rounded-xl mb-4 border border-gray-800">
+                <div class="text-xs text-primary font-bold mb-2">시간 범위 지정 (배차 수락 기준)</div>
                 <div class="flex gap-2 mb-2"><input type="tel" id="newMsnTgt" class="flex-1 bg-[#27272a] rounded-lg px-3 py-2 text-white text-xs border border-gray-700" placeholder="목표 건수"><input type="tel" id="newMsnRwd" class="flex-1 bg-[#27272a] rounded-lg px-3 py-2 text-white text-xs border border-gray-700" placeholder="보상금"></div>
                 <div class="flex gap-2 items-center mb-1">
                     <input type="time" id="newMsnStart" class="flex-1 bg-[#27272a] rounded-lg px-2 py-2 text-white text-xs border border-gray-700 text-center">
                     <span class="text-gray-500">~</span>
                     <input type="time" id="newMsnEnd" class="flex-1 bg-[#27272a] rounded-lg px-2 py-2 text-white text-xs border border-gray-700 text-center">
-                    <button onclick="addMission()" class="bg-primary text-black font-bold rounded-lg px-4 py-2 text-xs active:scale-95">등록</button>
+                    <button onclick="addMission()" class="bg-primary text-black font-bold rounded-lg px-4 py-2 text-xs">등록</button>
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto mb-4 pr-1">
@@ -140,7 +132,7 @@
     <header class="glass w-full px-5 py-3 shadow-lg shrink-0 z-50 pt-[calc(env(safe-area-inset-top)+12px)]">
         <div class="flex justify-between items-center mb-2">
             <h1 class="text-xl font-black italic tracking-tighter flex items-center select-none text-white" onclick="openDataDoctor()">
-                <i class="fas fa-cube text-primary mr-2"></i>MASTER <span class="text-xs font-normal text-muted ml-1 not-italic">V56.6</span>
+                <i class="fas fa-cube text-primary mr-2"></i>MASTER <span class="text-xs font-normal text-muted ml-1 not-italic">V56.7</span>
             </h1>
             <div class="flex gap-2">
                 <button onclick="openMissionModal()" class="h-8 px-3 text-xs font-bold border border-secondary rounded-lg text-muted hover:text-white flex items-center"><i class="fas fa-flag-checkered mr-1"></i><span id="missionBtnTxt">미션</span></button>
@@ -222,17 +214,21 @@
     </nav>
 
 <script>
-    const KEY = 'masterV56_6'; 
+    const KEY = 'masterV56_7'; 
     const DEFAULT_DATA = { date: new Date().toDateString(), logs: [], arch: [], slots: [0,0,0,0,0,0], slotTs: [0,0,0,0,0,0], missions: [], doneMissions: [], dist: 0, path: [], run: {on:false, start:null, goal:150000, tCnt:40, tTime:"21:00"} };
     let d = JSON.parse(JSON.stringify(DEFAULT_DATA));
     let map, poly, activeSlot=null, selW='sun', timerInt=null, watchId=null, curPos = {lat:null, lng:null};
     let isOffline = false;
 
-    // Core
-    const mainScroll = document.getElementById('mainScroll'); let touchStartY = 0;
+    // Scroll Lock
+    const mainScroll = document.getElementById('mainScroll');
+    let touchStartY = 0;
     if(mainScroll) {
         mainScroll.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: false });
-        mainScroll.addEventListener('touchmove', e => { if (mainScroll.scrollTop <= 0 && (e.touches[0].clientY - touchStartY) > 0) e.preventDefault(); }, { passive: false });
+        mainScroll.addEventListener('touchmove', e => {
+            const deltaY = e.touches[0].clientY - touchStartY;
+            if (mainScroll.scrollTop <= 0 && deltaY > 0) e.preventDefault();
+        }, { passive: false });
     }
     document.body.addEventListener('touchmove', e => { if (!e.target.closest('#mainScroll')) e.preventDefault(); }, { passive: false });
 
@@ -252,12 +248,11 @@
         const saved = localStorage.getItem(KEY);
         if(saved) { try { d = { ...DEFAULT_DATA, ...JSON.parse(saved) }; } catch(e) {} } 
         else { 
-            const old = localStorage.getItem('masterV56_5') || localStorage.getItem('masterV56_2');
+            const old = localStorage.getItem('masterV56_6') || localStorage.getItem('masterV56_2');
             if(old) { try { d = { ...d, ...JSON.parse(old) }; save(); } catch(e){} }
         }
-        if(!Array.isArray(d.missions)) d.missions = []; 
-        if(!Array.isArray(d.doneMissions)) d.doneMissions = [];
-        if(!Array.isArray(d.slotTs)) d.slotTs = [0,0,0,0,0,0]; // V56.6 Migration
+        if(!Array.isArray(d.missions)) d.missions = []; if(!Array.isArray(d.doneMissions)) d.doneMissions = [];
+        if(!Array.isArray(d.slotTs)) d.slotTs = [0,0,0,0,0,0]; // V56.7 migration
         
         checkDate(); render(); 
         if(d.run.on) startTimer(); 
@@ -274,7 +269,7 @@
     function closeDoctorModal() { $('doctorModal').classList.remove('show'); }
     function scanForBackups() {
         const list = $('recoveryList'); list.innerHTML = "";
-        const keys = ['masterV56_5', 'masterV56_2', 'masterV56', 'masterV55_7'];
+        const keys = ['masterV56_6', 'masterV56_2', 'masterV56', 'masterV55_7'];
         keys.forEach(k => {
             const data = localStorage.getItem(k);
             if(data) { try { const json = JSON.parse(data); const cnt = json.logs ? json.logs.filter(l=>typeof l.s==='number').length : 0; list.innerHTML += `<div class="flex justify-between items-center bg-black p-2 rounded border border-gray-700"><div><div class="text-primary font-bold">${k}</div><div class="text-gray-400">${json.date || '?'} / ${cnt}건</div></div><button onclick="recoverFromKey('${k}')" class="bg-gray-700 px-2 py-1 rounded text-white font-bold">복원</button></div>`; } catch(e){} }
@@ -294,15 +289,9 @@
         const json = JSON.stringify(d);
         const blob = new Blob([json], {type: "application/json"});
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Master_Backup_${new Date().toISOString().slice(0,10)}.json`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        const a = document.createElement('a'); a.href = url; a.download = `Master_Backup_${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
-    function copyBackup() {
-        const json = JSON.stringify(d);
-        try { navigator.clipboard.writeText(json).then(() => { alert("복사완료!"); }); } catch (e) { alert("복사 실패"); }
-    }
+    function copyBackup() { const json = JSON.stringify(d); try { navigator.clipboard.writeText(json).then(() => { alert("복사완료!"); }); } catch (e) { alert("복사 실패"); } }
     function restore() { $('fileInput').click(); }
     function loadBackupFile(inp) { const f=inp.files[0]; if(f){ const r=new FileReader(); r.onload=e=>{ if(confirm("복구?")){ d=JSON.parse(e.target.result); save(); location.reload(); }}; r.readAsText(f); } }
 
@@ -316,6 +305,7 @@
             let cls="border-gray-800 text-gray-500 hover:bg-gray-800/50", ico="fa-box", txt="대기", anim="";
             if(s===1) { cls="bg-primary/10 border-primary text-primary shadow-[0_0_15px_rgba(249,115,22,0.1)]"; ico="fa-motorcycle"; txt="픽업중"; anim="animate-pulse"; }
             if(s===2) { cls="bg-green-500/10 border-green-500 text-green-500"; ico="fa-check-circle"; txt="배달중"; }
+            
             grid.innerHTML += `<div onmousedown="handleSlotStart(${i})" ontouchstart="handleSlotStart(${i})" onmouseup="handleSlotEnd(${i})" ontouchend="handleSlotEnd(${i})" oncontextmenu="return false;" class="lovable-card h-28 flex flex-col items-center justify-center border cursor-pointer active:scale-95 transition-all ${cls} select-none"><i class="fas ${ico} text-3xl mb-2 ${anim}"></i><span class="font-bold text-sm">${i+1}. ${txt}</span></div>`;
         }); }
 
@@ -334,17 +324,17 @@
     }
 
     let pressTimer = null, isLongPress = false;
-    function handleSlotStart(i) { isLongPress = false; pressTimer = setTimeout(() => { isLongPress = true; if(d.slots[i] !== 0) { d.slots[i] = 0; d.slotTs[i] = 0; save(); render(); navigator.vibrate?.(50); toast(`슬롯 ${i+1} 초기화`); } }, 500); }
+    function handleSlotStart(i) { isLongPress = false; pressTimer = setTimeout(() => { isLongPress = true; if(d.slots[i] !== 0) { d.slots[i] = 0; d.slotTs[i] = 0; save(); render(); navigator.vibrate?.(50); toast(`슬롯 ${i+1} 초기화`); } }, 1000); }
     function handleSlotEnd(i) { 
         if(pressTimer) clearTimeout(pressTimer); 
         if(!isLongPress) { 
             if(d.slots[i]===0) { 
                 d.slots[i]=1; 
-                d.slotTs[i] = Date.now(); // [V56.6] Record Dispatch Time
+                d.slotTs[i] = Date.now(); // Record dispatch time
                 toast(`슬롯 ${i+1}: 픽업`); save(); render(); 
             } 
-            else if(d.slots[i]===1) { openActionModal(i); } 
-            else if(d.slots[i]===2) { openCreateModal(i); } // [V56.6 Fix] Always open modal on state 2
+            else if(d.slots[i]===1) { d.slots[i]=2; save(); render(); } // 1 -> 2 Immediate
+            else if(d.slots[i]===2) { openCreateModal(i); } // 2 -> Modal Immediate
         } 
     }
 
@@ -352,7 +342,7 @@
     function openActionModal(i) { targetSlot = i; $('actionModal').classList.add('show'); }
     function closeActionModal() { $('actionModal').classList.remove('show'); targetSlot = null; }
     function confirmPickup() { if(targetSlot!==null) { d.slots[targetSlot]=2; save(); render(); } closeActionModal(); }
-    function cancelPickup() { if(targetSlot!==null) { d.slots[targetSlot]=0; d.slotTs[targetSlot]=0; toast("초기화됨"); save(); render(); } closeActionModal(); }
+    function cancelPickup() { if(targetSlot!==null) { d.slots[targetSlot]=0; toast("초기화됨"); save(); render(); } closeActionModal(); }
 
     function openCreateModal(i) { activeSlot = i; $('modalTitle').innerText = "배달 완료"; $('editLogId').value=""; $('editArchIdx').value=""; $('weatherSection').classList.remove('hidden'); $('btnDelete').classList.add('hidden'); const now=new Date(); $('modalTime').value=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; $('modalAmount').value=''; const realLogs=d.logs.filter(l=>typeof l.s==='number'); $('modalAmount').placeholder=realLogs.length>0?Math.round(realLogs.reduce((a,b)=>a+b.amt,0)/realLogs.length/100)*100:3500; $('completeModal').classList.add('show'); setTimeout(()=>$('modalAmount').focus(),200); if(!isOffline) getWeather(); }
     function openEditLog(id) { const log=d.logs.find(l=>l.id===id); if(!log)return; $('modalTitle').innerText="수정"; $('editLogId').value=id; $('editArchIdx').value=""; $('weatherSection').classList.add('hidden'); $('btnDelete').classList.remove('hidden'); $('modalAmount').value=log.amt; $('modalTime').value=log.time; $('completeModal').classList.add('show'); }
@@ -383,16 +373,13 @@
     }
 
     function closeModal() { $('completeModal').classList.remove('show'); $('modalAmount').blur(); }
-    
-    // [V56.6 Fix] Save Dispatch Timestamp to Log
     function submitComplete() { 
         const amt=parseInt($('modalAmount').value)||parseInt($('modalAmount').placeholder)||0; const timeStr=$('modalTime').value; const logId=$('editLogId').value; const archIdx=$('editArchIdx').value; 
         if(logId) { const idx=d.logs.findIndex(l=>l.id==logId); if(idx!==-1) { d.logs[idx].amt=amt; d.logs[idx].time=timeStr; const [h,m]=timeStr.split(':'); const dt=new Date(d.logs[idx].ts); dt.setHours(h,m); d.logs[idx].ts=dt.getTime(); toast("수정됨"); } }
         else if(archIdx!=="") { d.arch[archIdx].inc=amt; const c=prompt("건수 수정",d.arch[archIdx].count); if(c) d.arch[archIdx].count=parseInt(c); toast("수정됨"); }
         else { 
             const now=new Date(); const [h,m]=timeStr.split(':'); now.setHours(h,m); 
-            // Use recorded dispatch time if available, else current time fallback
-            const dispatchTs = d.slotTs[activeSlot] || now.getTime();
+            const dispatchTs = d.slotTs[activeSlot] || now.getTime(); // Use saved dispatch time
             d.logs.unshift({id:Date.now(), time:timeStr, ts:now.getTime(), dispatchTs: dispatchTs, amt:amt, s:activeSlot+1, w:selW, lat:curPos.lat, lng:curPos.lng}); 
             d.slots[activeSlot]=0; d.slotTs[activeSlot]=0; 
             checkMsn(); toast(`${amt}원 저장`); 
@@ -411,7 +398,6 @@
         
         if(!tgt||!rwd || !sTime || !eTime) return toast("시간/목표 입력 필수"); 
         
-        // Construct TS
         const now = new Date();
         const startTs = new Date(now.toDateString() + ' ' + sTime).getTime();
         let endTs = new Date(now.toDateString() + ' ' + eTime).getTime();
@@ -424,18 +410,19 @@
     }
     function removeMission(id) { if(confirm("삭제?")) { d.missions=d.missions.filter(m=>m.id!==id); save(); renderMissionList(); updateMissionUI(); } }
     
-    // [V56.6 Fix] Logic: Dispatch Time vs Mission Window
+    // [V56.7] Strict Mission Count (Accepted Time vs Mission Window)
     function getMissionProgress(m) { 
         let c=0;
-        // 1. Check completed logs
+        // 1. Logs (Completed)
         d.logs.forEach(l => {
-            const checkTime = l.dispatchTs || l.ts; // Fallback for old logs
+            const checkTime = l.dispatchTs || l.ts; // Use dispatch time if available
             const isLog = typeof l.s==='number' || l.s===999;
             const inRange = checkTime >= m.startTs && checkTime <= m.endTs;
             if(isLog && inRange) c++;
         });
-        // 2. Check active slots
+        // 2. Active Slots (In Progress)
         d.slots.forEach((s, i) => {
+             // Only count if slot is active AND dispatch time is within window
              if(s > 0 && d.slotTs[i] >= m.startTs && d.slotTs[i] <= m.endTs) c++;
         });
         return c; 
@@ -449,13 +436,12 @@
     async function getWeather() { if(isOffline||!curPos.lat) return setText('weatherStatus',"오프라인/위치없음"); try { const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${curPos.lat}&longitude=${curPos.lng}&current_weather=true`); const json=await res.json(); const c=json.current_weather.weathercode; if(c<=3)setWeather('sun');else if(c>=71)setWeather('snow');else if(c>=51)setWeather('rain');else setWeather('cloud'); setText('weatherStatus',"날씨적용"); } catch(e){} }
     function getKORDay(dStr) { return ['일','월','화','수','목','금','토'][new Date(dStr).getDay()]; }
     
-    // [V56.6 Fix] AI Insights Always Active
+    // [V56.7 Fix] AI Insight (Enable immediately with today's data)
     function renderInsights() { 
         const rL=d.logs.filter(l=>typeof l.s==='number'||l.s===999); 
         const inc=rL.reduce((a,b)=>a+(b.amt||0),0); 
         setText('insAvg',rL.length>0?Math.round(inc/rL.length).toLocaleString():0); 
         
-        // Golden Time
         const hInc = {};
         if (rL.length > 0) {
              rL.forEach(l=>{ 
@@ -470,7 +456,6 @@
             setText('recTime', goldTime);
         } else { setText('recTime', '-'); }
 
-        // Best Day (Archive + Today)
         const dStats = {};
         d.arch.forEach(a=>{ 
             const dy=new Date(a.date).getDay(); 
@@ -490,9 +475,7 @@
                 if(avg > maxD) { maxD=avg; bDay=['일','월','화','수','목','금','토'][i]+"요일"; }
             }
         }
-        
-        // Fallback if no best day yet
-        if(bDay === "-" && inc > 0) bDay = "오늘";
+        if(bDay==='-' && inc > 0) bDay = "오늘"; // Fallback
         
         setText('recDay', bDay);
         $('aiCoachMsg').innerHTML = (bDay!=="-") ? `사장님, <b>${bDay}</b> 수익이 최고입니다!` : "데이터 수집 중...";
