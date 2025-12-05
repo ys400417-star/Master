@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Delivery Master V56.0</title>
+    
+    <link rel="manifest" href='data:application/manifest+json,{"name":"배달마스터","short_name":"배달마스터","start_url":".","display":"standalone","background_color":"#09090b","theme_color":"#09090b","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/726/726455.png","sizes":"512x512","type":"image/png"}]}'>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#09090b">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { bg: "#09090b", fg: "#fafafa", primary: "#f97316", secondary: "#27272a", muted: "#a1a1aa", card: "#18181b", success: "#22c55e", danger: "#ef4444" } } }
+        }
+    </script>
+    <style>
+        /* Web Native Scroll Lock */
+        html { overflow: hidden; height: 100%; overscroll-behavior: none; }
+        body { 
+            background-color: #09090b; color: #fafafa; 
+            padding-top: env(safe-area-inset-top); 
+            padding-bottom: env(safe-area-inset-bottom); 
+            overflow: hidden; height: 100%; height: 100dvh; 
+            width: 100%; position: fixed; 
+            display: flex; flex-direction: column; 
+            touch-action: none; user-select: none; -webkit-user-select: none;
+        }
+        .glass { background: rgba(24, 24, 27, 0.98); border-bottom: 1px solid #27272a; z-index: 50; }
+        #mainScroll { 
+            flex: 1; overflow-y: scroll; 
+            -webkit-overflow-scrolling: touch; overscroll-behavior: contain; 
+            position: relative; z-index: 10; padding-bottom: 200px; 
+            touch-action: pan-y;
+        }
+        .lovable-card { background-color: #18181b; border: 1px solid #27272a; border-radius: 12px; transition: transform 0.1s; position: relative; z-index: 20; user-select: none; -webkit-user-select: none; }
+        .lovable-card:active { transform: scale(0.98); }
+        .nav-active { color: #f97316; } .nav-item { color: #71717a; transition: color 0.2s; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px); opacity: 0; transition: opacity 0.2s; }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .page { display: none; width: 100%; height: 100%; } .page.active { display: block; }
+        #map { height: 100%; width: 100%; background: #222; }
+        .map-pill { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(0,0,0,0.8); color: white; padding: 8px 20px; border-radius: 30px; border: 1px solid #444; font-weight: bold; pointer-events: none; white-space: nowrap; }
+        .gps-btn { position: absolute; bottom: 100px; right: 20px; z-index: 1000; background: #27272a; color: white; padding: 12px; border-radius: 50%; border: 1px solid #444; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .pulse-dot { width: 8px; height: 8px; background-color: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+        .combat-mode { border: 2px solid rgba(239, 68, 68, 0.6); animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0% { border-color: rgba(239, 68, 68, 0.6); } 50% { border-color: rgba(239, 68, 68, 1); } 100% { border-color: rgba(239, 68, 68, 0.6); } }
+        input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .offline-banner { display:none; position:fixed; top:0; left:0; right:0; height:4px; background:red; z-index:99999; }
+    </style>
+</head>
+<body class="h-[100dvh] flex flex-col overflow-hidden select-none overscroll-none">
+
+    <div id="offlineIndicator" class="offline-banner"></div>
+    <div id="toastContainer" class="fixed bottom-24 left-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+    <input type="file" id="fileInput" class="hidden" accept=".json" onchange="loadBackupFile(this)">
+
+    <div id="archiveModal" class="modal-overlay">
+        <div class="bg-[#18181b] w-[90%] max-w-sm rounded-2xl border border-gray-800 p-6 shadow-2xl transform transition-all scale-100 h-[70vh] flex flex-col">
+            <h3 class="text-lg font-bold text-white mb-4 text-center flex justify-between items-center"><span>아카이브</span><button onclick="closeArchiveModal()" class="text-gray-500"><i class="fas fa-times"></i></button></h3>
+            <input type="hidden" id="archIdx" value="-1">
+            <div class="mb-4"><label class="text-xs text-gray-400 font-bold mb-1 block">날짜</label><input type="date" id="archDate" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 text-white font-bold text-center"></div>
+            <div class="grid grid-cols-2 gap-3 mb-4"><div><label class="text-xs text-gray-400 font-bold mb-1 block">총 건수</label><input type="tel" id="archCount" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 text-white text-lg font-bold text-center"></div><div><label class="text-xs text-gray-400 font-bold mb-1 block">총 수입</label><input type="tel" id="archInc" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 text-white text-lg font-bold text-center"></div></div>
+            <div class="bg-gray-900 p-3 rounded-xl border border-gray-700 mb-4 flex-1 overflow-y-auto"><h4 class="text-xs font-bold text-primary mb-2"><i class="fas fa-plus-circle mr-1"></i>일괄 추가</h4><div class="flex gap-2 mb-2"><input type="tel" id="bulkCount" class="flex-1 bg-black border border-gray-600 rounded p-2 text-white text-center" placeholder="건수"><input type="tel" id="bulkAmount" class="flex-[2] bg-black border border-gray-600 rounded p-2 text-white text-center" placeholder="금액"></div><button onclick="applyBulkAdd()" class="w-full bg-gray-800 border border-gray-600 text-white font-bold py-2 rounded hover:bg-gray-700">합산</button></div>
+            <div class="flex gap-3 mt-auto"><button onclick="deleteArchive()" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-600">삭제</button><button onclick="saveArchive()" class="flex-[2] py-3 rounded-xl font-bold text-black bg-primary">저장</button></div>
+        </div>
+    </div>
+
+    <div id="doctorModal" class="modal-overlay">
+        <div class="bg-[#18181b] w-full max-w-sm rounded-2xl border border-gray-800 p-5 shadow-2xl h-[80vh] flex flex-col">
+            <h3 class="text-lg font-bold text-red-500 mb-4 flex justify-between items-center"><span>데이터 진단</span><button onclick="closeDoctorModal()" class="text-gray-500"><i class="fas fa-times"></i></button></h3>
+            <div class="flex-1 overflow-y-auto space-y-4">
+                <div class="bg-gray-900 p-3 rounded-xl border border-gray-700"><h4 class="text-sm font-bold text-white mb-2">기록 복구</h4><div id="recoveryList" class="space-y-2 text-xs"></div></div>
+                <div class="bg-gray-900 p-3 rounded-xl border border-gray-700"><h4 class="text-sm font-bold text-white mb-2">수동 보정</h4><div class="flex gap-2 mb-2"><input type="tel" id="fixCount" class="flex-1 bg-black border border-gray-600 rounded p-2 text-white" placeholder="건수"><input type="tel" id="fixAmount" class="flex-1 bg-black border border-gray-600 rounded p-2 text-white" placeholder="금액"></div><button onclick="addManualFix()" class="w-full bg-blue-600 text-white font-bold py-2 rounded">강제 추가</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="actionModal" class="modal-overlay">
+        <div class="bg-[#18181b] w-[85%] max-w-xs rounded-2xl border border-gray-800 p-5 shadow-2xl flex flex-col gap-3">
+            <h3 class="text-center text-white font-bold mb-2">상태 변경</h3>
+            <button onclick="confirmPickup()" class="bg-primary text-black font-bold py-3 rounded-xl shadow-lg">🚀 배달 출발</button>
+            <button onclick="cancelPickup()" class="bg-gray-800 text-red-500 font-bold py-3 rounded-xl border border-gray-700">↩ 대기 복귀</button>
+            <button onclick="closeActionModal()" class="text-gray-500 text-xs py-2 mt-1">닫기</button>
+        </div>
+    </div>
+
+    <div id="completeModal" class="modal-overlay">
+        <div class="bg-[#18181b] w-[90%] max-w-xs rounded-2xl border border-gray-800 p-6 shadow-2xl transform transition-all scale-100">
+            <h3 class="text-lg font-bold text-white mb-4 text-center" id="modalTitle">완료</h3>
+            <input type="hidden" id="editLogId" value=""><input type="hidden" id="editArchIdx" value="">
+            <div class="flex gap-2 mb-6">
+                <div class="relative flex-[2]"><span class="absolute left-3 top-3.5 text-gray-500 font-bold text-lg">₩</span><input type="tel" id="modalAmount" inputmode="numeric" pattern="[0-9]*" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 pl-8 text-white text-xl font-black h-14" placeholder="0"></div>
+                <div class="relative flex-1"><input type="time" id="modalTime" class="w-full h-14 bg-[#27272a] border border-gray-700 rounded-xl px-1 text-white text-base font-bold text-center appearance-none"></div>
+            </div>
+            <div id="weatherSection" class="mb-4">
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="setWeather('sun')" id="w-sun" class="w-btn p-3 rounded-xl border border-gray-700 bg-gray-800 text-gray-400"><i class="fas fa-sun"></i></button>
+                    <button onclick="setWeather('cloud')" id="w-cloud" class="w-btn p-3 rounded-xl border border-gray-700 bg-gray-800 text-gray-400"><i class="fas fa-cloud"></i></button>
+                    <button onclick="setWeather('rain')" id="w-rain" class="w-btn p-3 rounded-xl border border-gray-700 bg-gray-800 text-gray-400"><i class="fas fa-umbrella"></i></button>
+                    <button onclick="setWeather('snow')" id="w-snow" class="w-btn p-3 rounded-xl border border-gray-700 bg-gray-800 text-gray-400"><i class="fas fa-snowflake"></i></button>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 py-3 rounded-xl font-bold text-gray-400 bg-gray-800 border border-gray-700">취소</button>
+                <button onclick="deleteEntry()" id="btnDelete" class="hidden flex-1 py-3 rounded-xl font-bold text-white bg-red-600">삭제</button>
+                <button onclick="submitComplete()" id="btnSave" class="flex-1 py-3 rounded-xl font-bold text-black bg-primary shadow-lg">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="missionModal" class="modal-overlay">
+        <div class="bg-[#18181b] w-full max-w-sm rounded-2xl border border-gray-800 p-5 shadow-2xl h-[85vh] flex flex-col">
+            <h3 class="text-lg font-bold text-white mb-4 flex justify-between items-center"><span>미션 센터</span><button onclick="closeMissionModal()" class="text-gray-500"><i class="fas fa-times"></i></button></h3>
+            <div class="bg-gray-900 p-3 rounded-xl mb-4 border border-gray-800">
+                <div class="flex gap-2 mb-2"><input type="tel" id="newMsnTgt" class="flex-1 bg-[#27272a] rounded-lg px-3 py-2 text-white text-xs border border-gray-700" placeholder="목표 건수"><input type="tel" id="newMsnRwd" class="flex-1 bg-[#27272a] rounded-lg px-3 py-2 text-white text-xs border border-gray-700" placeholder="보상금"></div>
+                <div class="flex gap-2"><input type="tel" id="newMsnDur" class="flex-1 bg-[#27272a] rounded-lg px-3 py-2 text-white text-xs border border-gray-700" placeholder="제한시간(분)"><button onclick="addMission()" class="flex-1 bg-primary text-black font-bold rounded-lg text-xs">시작</button></div>
+                <div class="text-[9px] text-gray-400 mt-1 ml-1">* 미션 등록 시점부터 카운트가 시작됩니다.</div>
+            </div>
+            <div class="flex-1 overflow-y-auto mb-4 pr-1"><div id="activeMissionList" class="space-y-2 mb-6"></div><div id="doneMissionList" class="space-y-2"></div></div>
+        </div>
+    </div>
+
+    <header class="glass w-full px-5 py-3 shadow-lg shrink-0 z-50 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <div class="flex justify-between items-center mb-2">
+            <h1 class="text-xl font-black italic tracking-tighter flex items-center select-none text-white" onclick="openDataDoctor()">
+                <i class="fas fa-cube text-primary mr-2"></i>MASTER <span class="text-xs font-normal text-muted ml-1 not-italic">V56.0</span>
+            </h1>
+            <div class="flex gap-2">
+                <button onclick="openMissionModal()" class="h-8 px-3 text-xs font-bold border border-secondary rounded-lg text-muted hover:text-white flex items-center"><i class="fas fa-flag-checkered mr-1"></i><span id="missionBtnTxt">미션</span></button>
+                <button onclick="resetDay()" class="h-8 px-3 text-xs font-bold bg-red-900/10 text-red-500 border border-red-900/30 rounded-lg"><i class="fas fa-power-off"></i></button>
+            </div>
+        </div>
+        <div id="missionBox" class="hidden mb-3 space-y-1.5"></div>
+        <div class="grid grid-cols-2 gap-3 h-[50px]">
+            <div class="lovable-card px-3 py-2 flex justify-between items-center"><div class="text-[10px] font-bold text-muted">INCOME</div><div class="text-lg font-black text-white tracking-tight"><span id="uiIncome">0</span><span class="text-xs font-medium text-muted ml-1">원</span></div></div>
+            <div class="lovable-card px-3 py-2 flex justify-between items-center"><div class="text-[10px] font-bold text-muted">COUNT</div><div class="text-lg font-bold text-primary tracking-tight"><span id="uiCount">0</span><span class="text-xs text-muted ml-1">건</span></div></div>
+        </div>
+    </header>
+
+    <div id="mainScroll" class="bg-[#09090b] px-4 pt-4">
+        <div id="p1" class="page active">
+            <div id="trackBox" class="lovable-card p-4 mb-4 border-l-4 border-l-gray-600 transition-all duration-300">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-bold text-white text-md">배차 추적</h3>
+                        <span id="peakBadge" class="hidden text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full animate-pulse font-bold">🔥 PEAK</span>
+                        <div id="liveDot" class="hidden pulse-dot"></div>
+                    </div>
+                    <div id="timer" class="text-xs text-gray-400 font-mono mt-1 tabular-nums">00:00:00</div>
+                    <button onclick="toggleRun()" id="runBtn" class="bg-gray-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg">운행시작</button>
+                </div>
+                <div id="trackStats" class="grid grid-cols-3 gap-2 border-t border-gray-800 pt-3 hidden">
+                    <div class="text-center"><div class="text-[9px] text-gray-500">시간당수입</div><div class="text-sm font-bold text-white"><span id="valWage">0</span></div></div>
+                    <div class="text-center border-l border-gray-800"><div class="text-[9px] text-gray-500">시간당건수</div><div class="text-sm font-bold text-primary"><span id="valPace">0.0</span></div></div>
+                    <div class="text-center border-l border-gray-800 cursor-pointer" onclick="setGoal()"><div class="text-[9px] text-gray-500">목표달성</div><div class="text-sm font-bold text-green-500"><span id="valGoal">0</span>%</div></div>
+                </div>
+                <div id="coachBox" class="hidden mt-3 pt-2 border-t border-gray-700 text-center cursor-pointer active:bg-gray-800/50 rounded" onclick="setStrategy()">
+                    <div class="text-[10px] text-gray-400">목표 <b id="uiTgtCnt" class="text-white">--</b>건 (<b id="uiTgtTime" class="text-white">--:--</b>) <i class="fas fa-cog ml-1"></i></div>
+                    <div class="text-xs font-bold mt-1" id="uiMsg">분석 대기중...</div>
+                </div>
+            </div>
+            <div id="slotGrid" class="grid grid-cols-2 gap-3 pb-8"></div>
+            <div class="h-20 w-full"></div>
+        </div>
+
+        <div id="p2" class="page">
+            <div class="lovable-card p-4 border border-secondary bg-black/20 mb-4 flex gap-2">
+                <button onclick="backup()" class="flex-1 bg-gray-800 text-xs py-2 rounded text-blue-400 border border-gray-700 font-bold active:bg-gray-700"><i class="fas fa-file-export mr-1"></i>백업</button>
+                <button onclick="restore()" class="flex-1 bg-gray-800 text-xs py-2 rounded text-green-400 border border-gray-700 font-bold active:bg-gray-700"><i class="fas fa-file-import mr-1"></i>복구</button>
+            </div>
+            <button onclick="openArchiveCreator()" class="w-full bg-gray-800 border border-gray-700 text-gray-400 text-xs font-bold py-3 rounded-xl mb-4">+ 과거 기록 추가/생성</button>
+            
+            <div class="lovable-card p-4 bg-gradient-to-br from-[#1e1e24] to-[#2a2a30] border border-gray-700 mb-4 shadow-xl">
+                <h3 class="text-sm font-bold text-white mb-3 flex items-center"><i class="fas fa-brain text-primary mr-2"></i>AI 전략</h3>
+                <div id="aiCoachMsg" class="text-xs text-gray-300 mb-3 bg-black/40 p-3 rounded border-l-2 border-primary">데이터 수집 중...</div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-black/30 p-3 rounded-lg"><div class="text-[10px] text-gray-400">BEST 요일</div><div class="text-sm font-bold text-white mt-1" id="recDay">-</div></div>
+                    <div class="bg-black/30 p-3 rounded-lg"><div class="text-[10px] text-gray-400">GOLDEN 타임</div><div class="text-sm font-bold text-primary mt-1" id="recTime">-</div></div>
+                </div>
+            </div>
+            <div class="lovable-card p-5 bg-[#18181b] border border-gray-800 mb-4">
+                <h3 class="text-sm font-bold text-white mb-4">시간대별 통계</h3>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-black/30 p-3 rounded-lg border border-white/5"><div class="text-[10px] text-gray-400">건당 평균</div><div class="text-lg font-bold text-white mt-1"><span id="insAvg">0</span>원</div></div>
+                    <div class="bg-black/30 p-3 rounded-lg border border-white/5"><div class="text-[10px] text-gray-400">시간당 건수</div><div class="text-lg font-bold text-primary mt-1"><span id="insHour">0</span>/h</div></div>
+                </div>
+                <div id="hourList" class="space-y-1 text-xs border-t border-gray-700 pt-2 max-h-60 overflow-y-auto"></div>
+            </div>
+            <div class="lovable-card p-4 mb-4"><h3 class="text-xs font-bold text-gray-400 mb-3 flex justify-between"><span>오늘 상세 (수정)</span><i class="fas fa-pen text-[10px]"></i></h3><div id="logList" class="space-y-2"></div></div>
+            <div class="lovable-card p-4 mb-4"><h3 class="text-xs font-bold text-gray-400 mb-3 flex justify-between"><span>과거 아카이브 (수정)</span><i class="fas fa-pen text-[10px]"></i></h3><div id="archList" class="space-y-3"></div></div>
+            <div class="h-40 w-full"></div>
+        </div>
+
+        <div id="p3" class="page relative h-full w-full">
+            <div id="map" class="z-0"></div>
+            <div class="map-pill shadow-lg"><i class="fas fa-motorcycle text-primary mr-1"></i> <span id="uiDist">0.0</span> km</div>
+            <button onclick="recenterMap()" class="gps-btn active:bg-gray-700 active:scale-95 transition-all"><i class="fas fa-crosshairs text-xl"></i></button>
+        </div>
+    </div>
+
+    <nav class="fixed bottom-6 left-6 right-6 h-16 glass rounded-2xl border border-secondary flex justify-around items-center shadow-2xl z-50 pb-[calc(env(safe-area-inset-bottom))]">
+        <button onclick="go(1)" id="n1" class="nav-item nav-active flex flex-col items-center w-1/3 active:scale-90 transition-transform"><i class="fas fa-th-large text-lg mb-1"></i><span class="text-[10px] font-bold">배차</span></button>
+        <button onclick="go(2)" id="n2" class="nav-item text-gray-500 flex flex-col items-center w-1/3 active:scale-90 transition-transform"><i class="fas fa-chart-line text-lg mb-1"></i><span class="text-[10px] font-bold">인사이트</span></button>
+        <button onclick="go(3)" id="n3" class="nav-item text-gray-500 flex flex-col items-center w-1/3 active:scale-90 transition-transform"><i class="fas fa-map-marked-alt text-lg mb-1"></i><span class="text-[10px] font-bold">지도</span></button>
+    </nav>
+
+<script>
+    const KEY = 'masterV56'; 
+    const DEFAULT_DATA = { date: new Date().toDateString(), logs: [], arch: [], slots: [0,0,0,0,0,0], missions: [], doneMissions: [], dist: 0, path: [], run: {on:false, start:null, goal:150000, tCnt:40, tTime:"21:00"} };
+    let d = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    let map, poly, activeSlot=null, selW='sun', timerInt=null, watchId=null, curPos = {lat:null, lng:null};
+    let isOffline = false;
+
+    // Core
+    const mainScroll = document.getElementById('mainScroll'); let touchStartY = 0;
+    if(mainScroll) {
+        mainScroll.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: false });
+        mainScroll.addEventListener('touchmove', e => { if (mainScroll.scrollTop <= 0 && (e.touches[0].clientY - touchStartY) > 0) e.preventDefault(); }, { passive: false });
+    }
+    document.body.addEventListener('touchmove', e => { if (!e.target.closest('#mainScroll')) e.preventDefault(); }, { passive: false });
+
+    const $ = (id) => document.getElementById(id);
+    const setText = (id, val) => { const el=$(id); if(el) el.innerText=val; };
+    const toast = (msg) => {
+        const t = $('toastContainer'); const el = document.createElement('div');
+        el.className = "bg-gray-800 text-white px-4 py-2 rounded mb-2 border border-gray-600 text-sm shadow-lg animate-[fadeIn_0.2s_ease-out]";
+        el.innerHTML = `<i class="fas fa-info-circle text-primary mr-2"></i>${msg}`;
+        t.appendChild(el); setTimeout(()=> { el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 2000);
+    };
+
+    window.onload = () => {
+        const saved = localStorage.getItem(KEY);
+        if(saved) { try { d = { ...DEFAULT_DATA, ...JSON.parse(saved) }; } catch(e) {} } 
+        else { 
+            const old = localStorage.getItem('masterV55_7') || localStorage.getItem('masterV55_6') || localStorage.getItem('masterV55_2');
+            if(old) { try { d = { ...d, ...JSON.parse(old) }; save(); } catch(e){} }
+        }
+        if(!Array.isArray(d.missions)) d.missions = []; if(!Array.isArray(d.doneMissions)) d.doneMissions = [];
+        checkDate(); render(); if(d.run.on) startTimer(); updateRunUI(); 
+        setTimeout(() => { if(navigator.onLine) { initMap(); startGPS(); } else { isOffline=true; } }, 1000);
+        setInterval(checkDate, 60000);
+    };
+
+    function save() { localStorage.setItem(KEY, JSON.stringify(d)); }
+
+    // Doctor
+    let doctorClickCount = 0;
+    function openDataDoctor() { doctorClickCount++; if(doctorClickCount >= 5) { doctorClickCount = 0; scanForBackups(); $('doctorModal').classList.add('show'); } }
+    function closeDoctorModal() { $('doctorModal').classList.remove('show'); }
+    function scanForBackups() {
+        const list = $('recoveryList'); list.innerHTML = "";
+        const keys = ['masterV55_7', 'masterV55_6', 'masterV55_2', 'masterV55'];
+        keys.forEach(k => {
+            const data = localStorage.getItem(k);
+            if(data) { try { const json = JSON.parse(data); const cnt = json.logs ? json.logs.filter(l=>typeof l.s==='number').length : 0; list.innerHTML += `<div class="flex justify-between items-center bg-black p-2 rounded border border-gray-700"><div><div class="text-primary font-bold">${k}</div><div class="text-gray-400">${json.date || '?'} / ${cnt}건</div></div><button onclick="recoverFromKey('${k}')" class="bg-gray-700 px-2 py-1 rounded text-white font-bold">복원</button></div>`; } catch(e){} }
+        });
+    }
+    function recoverFromKey(k) { if(confirm("복원?")) { const d2=localStorage.getItem(k); if(d2){ d=JSON.parse(d2); save(); location.reload(); } } }
+    function addManualFix() {
+        const cnt=parseInt($('fixCount').value); const amt=parseInt($('fixAmount').value);
+        if(!cnt||!amt)return alert("입력하세요");
+        if(confirm(`${cnt}건, ${amt}원 추가?`)) {
+            d.logs.unshift({id:Date.now(),time:"수동보정",ts:Date.now(),amt:amt,s:999,isManual:true});
+            for(let i=0;i<cnt-1;i++) d.logs.push({id:Date.now()+i+1,time:"보정",ts:Date.now(),amt:0,s:999});
+            save(); render(); closeDoctorModal();
+        }
+    }
+
+    // Render
+    function render() {
+        const realLogs = d.logs.filter(l => typeof l.s === 'number' || l.s === 999); 
+        const inc = d.logs.reduce((a,b)=>a+(b.amt||0),0); 
+        const cnt = realLogs.length;
+        setText('uiIncome', inc.toLocaleString()); setText('uiCount', cnt);
+        
+        const grid = $('slotGrid'); if(grid) { grid.innerHTML = ''; d.slots.forEach((s, i) => {
+            let cls="border-gray-800 text-gray-500 hover:bg-gray-800/50", ico="fa-box", txt="대기", anim="";
+            if(s===1) { cls="bg-primary/10 border-primary text-primary shadow-[0_0_15px_rgba(249,115,22,0.1)]"; ico="fa-motorcycle"; txt="픽업중"; anim="animate-pulse"; }
+            if(s===2) { cls="bg-green-500/10 border-green-500 text-green-500"; ico="fa-check-circle"; txt="배달중"; }
+            grid.innerHTML += `<div onmousedown="handleSlotStart(${i})" ontouchstart="handleSlotStart(${i})" onmouseup="handleSlotEnd(${i})" ontouchend="handleSlotEnd(${i})" oncontextmenu="return false;" class="lovable-card h-28 flex flex-col items-center justify-center border cursor-pointer active:scale-95 transition-all ${cls} select-none"><i class="fas ${ico} text-3xl mb-2 ${anim}"></i><span class="font-bold text-sm">${i+1}. ${txt}</span></div>`;
+        }); }
+
+        d.logs.sort((a,b) => b.ts - a.ts);
+        const list = $('logList'); if(list) { list.innerHTML = d.logs.length ? '' : '<div class="text-center text-xs text-gray-600 py-4">기록 없음</div>'; d.logs.forEach(l => {
+            const isB = l.s === '🎁'; const isM = l.s === 999;
+            const badge = isB ? '<span class="text-yellow-500 mr-2 font-bold">BONUS</span>' : (isM ? '<span class="text-gray-500 mr-2 font-bold">보정</span>' : `<span class="bg-gray-800 text-primary px-1.5 py-0.5 rounded mr-2 font-bold border border-gray-700">${l.s}</span>`);
+            if(l.amt > 0 || !isM) list.innerHTML += `<div onclick="openEditLog(${l.id})" class="flex justify-between p-3 rounded-lg border border-gray-800 mb-2 bg-[#202023] active:bg-gray-700 transition-colors cursor-pointer"><div class="flex items-center text-xs text-gray-400">${badge} ${l.time} ${!isB && !isM && l.w ? `<i class="fas fa-${l.w==='rain'?'umbrella':l.w} ml-2 text-gray-600"></i>` : ''}</div><div class="font-bold text-white tracking-wide">${l.amt.toLocaleString()} <i class="fas fa-chevron-right text-[8px] ml-1 text-gray-600"></i></div></div>`;
+        }); }
+
+        const arch = $('archList'); if(arch) { arch.innerHTML = d.arch.length ? '' : '<div class="text-center text-xs text-gray-600 py-4">이전 기록 없음</div>'; [...d.arch].reverse().forEach((a, idx) => {
+            const realIdx = d.arch.length - 1 - idx; 
+            arch.innerHTML += `<div onclick="openEditArch(${realIdx})" class="flex justify-between p-3 rounded border border-gray-800 mb-2 bg-gray-800/20 active:bg-gray-800/40 cursor-pointer"><div class="text-xs text-gray-400 font-bold flex flex-col justify-center"><span>${a.date}</span><span class="text-[9px] text-gray-600 font-normal">${getKORDay(a.date)}</span></div><div class="text-right"><div class="font-bold text-primary">${a.inc.toLocaleString()}원</div><div class="text-[10px] text-gray-500">${a.count}건 / ${(a.dst||0).toFixed(1)}km</div></div></div>`;
+        }); }
+        updateMissionUI(); updateRunUI(); renderInsights();
+    }
+
+    let pressTimer = null, isLongPress = false;
+    function handleSlotStart(i) { isLongPress = false; pressTimer = setTimeout(() => { isLongPress = true; if(d.slots[i] !== 0) { d.slots[i] = 0; save(); render(); navigator.vibrate?.(50); toast(`슬롯 ${i+1} 초기화`); } }, 500); }
+    function handleSlotEnd(i) { 
+        if(pressTimer) clearTimeout(pressTimer); 
+        if(!isLongPress) { 
+            if(d.slots[i]===0) { d.slots[i]=1; toast(`슬롯 ${i+1}: 픽업`); save(); render(); } 
+            else if(d.slots[i]===1) { openActionModal(i); } 
+            else if(d.slots[i]===2) { openCreateModal(i); } // FIX: State 2 always opens modal
+        } 
+    }
+
+    let targetSlot = null;
+    function openActionModal(i) { targetSlot = i; $('actionModal').classList.add('show'); }
+    function closeActionModal() { $('actionModal').classList.remove('show'); targetSlot = null; }
+    function confirmPickup() { if(targetSlot!==null) { d.slots[targetSlot]=2; save(); render(); } closeActionModal(); }
+    function cancelPickup() { if(targetSlot!==null) { d.slots[targetSlot]=0; toast("초기화됨"); save(); render(); } closeActionModal(); }
+
+    function openCreateModal(i) { activeSlot = i; $('modalTitle').innerText = "배달 완료"; $('editLogId').value=""; $('editArchIdx').value=""; $('weatherSection').classList.remove('hidden'); $('btnDelete').classList.add('hidden'); const now=new Date(); $('modalTime').value=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; $('modalAmount').value=''; const realLogs=d.logs.filter(l=>typeof l.s==='number'); $('modalAmount').placeholder=realLogs.length>0?Math.round(realLogs.reduce((a,b)=>a+b.amt,0)/realLogs.length/100)*100:3500; $('completeModal').classList.add('show'); setTimeout(()=>$('modalAmount').focus(),200); if(!isOffline) getWeather(); }
+    function openEditLog(id) { const log=d.logs.find(l=>l.id===id); if(!log)return; $('modalTitle').innerText="수정"; $('editLogId').value=id; $('editArchIdx').value=""; $('weatherSection').classList.add('hidden'); $('btnDelete').classList.remove('hidden'); $('modalAmount').value=log.amt; $('modalTime').value=log.time; $('completeModal').classList.add('show'); }
+    
+    function openArchiveCreator() { $('archIdx').value = "-1"; $('archDate').value = new Date().toISOString().split('T')[0]; $('archCount').value = ""; $('archInc').value = ""; $('archiveModal').classList.add('show'); }
+    function openEditArch(idx) { const item=d.arch[idx]; if(!item)return; $('archIdx').value = idx; try { const dateObj = new Date(item.date); const yyyy = dateObj.getFullYear(); const mm = String(dateObj.getMonth() + 1).padStart(2, '0'); const dd = String(dateObj.getDate()).padStart(2, '0'); $('archDate').value = `${yyyy}-${mm}-${dd}`; } catch(e) { $('archDate').value = ""; } $('archCount').value = item.count; $('archInc').value = item.inc; $('archiveModal').classList.add('show'); }
+    function closeArchiveModal() { $('archiveModal').classList.remove('show'); $('bulkCount').value=''; $('bulkAmount').value=''; }
+    function saveArchive() { const idx = parseInt($('archIdx').value); const dateVal = $('archDate').value; const cnt = parseInt($('archCount').value); const inc = parseInt($('archInc').value); if(!dateVal || isNaN(cnt) || isNaN(inc)) return alert("값 확인"); const dateStr = new Date(dateVal).toDateString(); if (idx === -1) { d.arch.push({date: dateStr, count: cnt, inc: inc, dst: 0}); toast("생성됨"); } else { d.arch[idx].date = dateStr; d.arch[idx].count = cnt; d.arch[idx].inc = inc; toast("수정됨"); } d.arch.sort((a,b) => new Date(a.date) - new Date(b.date)); save(); render(); closeArchiveModal(); }
+    function deleteArchive() { const idx = parseInt($('archIdx').value); if(idx === -1) return closeArchiveModal(); if(confirm("삭제?")) { d.arch.splice(idx, 1); save(); render(); closeArchiveModal(); toast("삭제됨"); } }
+    function applyBulkAdd() { const addCnt = parseInt($('bulkCount').value) || 0; const addAmt = parseInt($('bulkAmount').value) || 0; if(addCnt === 0 && addAmt === 0) return; $('archCount').value = (parseInt($('archCount').value) || 0) + addCnt; $('archInc').value = (parseInt($('archInc').value) || 0) + addAmt; $('bulkCount').value = ''; $('bulkAmount').value = ''; toast("합산됨"); }
+
+    function closeModal() { $('completeModal').classList.remove('show'); $('modalAmount').blur(); }
+    function submitComplete() { 
+        const amt=parseInt($('modalAmount').value)||parseInt($('modalAmount').placeholder)||0; const timeStr=$('modalTime').value; const logId=$('editLogId').value; 
+        if(logId) { const idx=d.logs.findIndex(l=>l.id==logId); if(idx!==-1) { d.logs[idx].amt=amt; d.logs[idx].time=timeStr; const [h,m]=timeStr.split(':'); const dt=new Date(d.logs[idx].ts); dt.setHours(h,m); d.logs[idx].ts=dt.getTime(); toast("수정됨"); } }
+        else { const now=new Date(); const [h,m]=timeStr.split(':'); now.setHours(h,m); d.logs.unshift({id:Date.now(), time:timeStr, ts:now.getTime(), amt:amt, s:activeSlot+1, w:selW, lat:curPos.lat, lng:curPos.lng}); d.slots[activeSlot]=0; checkMsn(); toast(`${amt}원 저장`); }
+        closeModal(); save(); render(); 
+    }
+    function deleteEntry() { if(!confirm("삭제?"))return; const logId=$('editLogId').value; if(logId) d.logs=d.logs.filter(l=>l.id!=logId); toast("삭제됨"); closeModal(); save(); render(); }
+
+    function openMissionModal() { $('missionModal').classList.add('show'); renderMissionList(); }
+    function closeMissionModal() { $('missionModal').classList.remove('show'); }
+    
+    // [V55.6 Fix] Added Duration to Mission
+    function addMission() { 
+        const tgt=parseInt($('newMsnTgt').value); const rwd=parseInt($('newMsnRwd').value); const dur=parseInt($('newMsnDur').value); 
+        if(!tgt||!rwd)return toast("입력 확인"); 
+        // Calculate End Time
+        const now = Date.now();
+        const endTs = dur ? now + (dur * 60000) : null; // Duration in mins to ms
+        d.missions.push({id: now, tgt: tgt, rwd: rwd, startTs: now, endTs: endTs}); 
+        d.missions.sort((a,b)=>a.tgt-b.tgt); 
+        $('newMsnTgt').value=''; $('newMsnRwd').value=''; $('newMsnDur').value=''; 
+        save(); renderMissionList(); updateMissionUI(); 
+    }
+    function removeMission(id) { if(confirm("삭제?")) { d.missions=d.missions.filter(m=>m.id!==id); save(); renderMissionList(); updateMissionUI(); } }
+    
+    // [V55.6 Fix] Strict Time Window Check
+    function getMissionProgress(m) { 
+        let c=0;
+        const now = Date.now();
+        // Check only logs created AFTER start and BEFORE end (if set)
+        d.logs.forEach(l => {
+            const validStart = l.ts >= m.startTs;
+            const validEnd = m.endTs ? l.ts <= m.endTs : true;
+            if((typeof l.s==='number'||l.s===999) && validStart && validEnd) {
+                c++;
+            }
+        });
+        return c; 
+    }
+
+    function renderMissionList() { 
+        const act=$('activeMissionList'); const done=$('doneMissionList'); 
+        act.innerHTML=d.missions.length?'':'<div class="text-gray-600 text-xs">없음</div>'; 
+        d.missions.forEach(m=>{ 
+            const p=getMissionProgress(m); 
+            const timeLeft = m.endTs ? Math.max(0, Math.ceil((m.endTs - Date.now())/60000)) + '분 남음' : '무제한';
+            act.innerHTML+=`<div class="flex justify-between items-center bg-[#27272a] p-3 rounded-lg border border-gray-700"><div class="flex flex-col"><div class="flex items-center"><span class="text-primary font-bold text-sm mr-1">${m.tgt}건</span><span class="bg-blue-900 text-blue-300 text-[9px] px-1 rounded ml-1">${timeLeft}</span></div><span class="text-gray-500 text-[10px]">진행: ${p}건</span></div><div class="flex items-center gap-3"><span class="text-white font-bold text-sm">+${m.rwd.toLocaleString()}</span><button onclick="removeMission(${m.id})" class="text-red-500 text-xs"><i class="fas fa-trash"></i></button></div></div>`; 
+        }); 
+        done.innerHTML=d.doneMissions.length?'':'<div class="text-gray-600 text-xs">없음</div>'; 
+        d.doneMissions.forEach(m=>{ done.innerHTML+=`<div class="flex justify-between items-center bg-green-900/20 p-3 rounded-lg border border-green-900/50"><div class="text-green-500 font-bold text-xs"><i class="fas fa-check mr-1"></i>${m.tgt}건 달성</div><div class="text-white font-bold text-xs">+${m.rwd.toLocaleString()}</div></div>`; }); 
+    }
+    
+    function checkMsn() { 
+        const ach=[], rem=[]; 
+        d.missions.forEach(m=>{ 
+            const curCnt = getMissionProgress(m);
+            // Check if expired
+            if (m.endTs && Date.now() > m.endTs) {
+                toast("미션 시간 종료"); // Just remove or keep as failed? For now remove.
+            } else if(curCnt >= m.tgt) {
+                ach.push(m); 
+            } else {
+                rem.push(m);
+            }
+        }); 
+        
+        if(ach.length>0) { 
+            ach.forEach(m=>{ 
+                d.logs.unshift({id:Date.now(),time:"미션성공",ts:Date.now(),amt:m.rwd,s:'🎁',isBonus:true}); 
+                d.doneMissions.unshift({tgt:m.tgt,rwd:m.rwd,ts:Date.now()}); 
+                toast(`🎉 ${m.tgt}건 달성! +${m.rwd}`); 
+            }); 
+            d.missions=rem; save(); renderMissionList(); 
+        } 
+        updateMissionUI(); 
+    }
+    
+    function updateMissionUI() { 
+        const box=$('missionBox'); if(d.missions.length===0) { box.classList.add('hidden'); setText('missionBtnTxt','미션'); return; } 
+        box.classList.remove('hidden'); setText('missionBtnTxt','진행중'); 
+        box.innerHTML=''; 
+        d.missions.forEach(m=>{ 
+            const p=getMissionProgress(m); 
+            const pct=Math.min(100,(p/m.tgt)*100); 
+            const tLabel = m.endTs ? Math.ceil((m.endTs - Date.now())/60000) + '분' : 'Today';
+            box.innerHTML+=`<div class="mb-1"><div class="flex justify-between text-[9px] text-gray-400 mb-0.5 px-1"><span><b class="text-white">${m.tgt}</b>건 (${tLabel})</span><span>${p}/${m.tgt}</span></div><div class="h-1.5 bg-secondary rounded-full overflow-hidden border border-white/5 relative"><div class="h-full bg-gradient-to-r from-orange-500 to-yellow-500" style="width:${pct}%"></div></div></div>`; 
+        }); 
+    }
+
+    // [V55.6 Fix] AI Insights Logic
+    function renderInsights() { 
+        const rL=d.logs.filter(l=>typeof l.s==='number'||l.s===999); 
+        const inc=rL.reduce((a,b)=>a+(b.amt||0),0); 
+        setText('insAvg',rL.length>0?Math.round(inc/rL.length).toLocaleString():0); 
+        
+        // Combine ALL data for stats
+        const allLogs = [...rL]; // Start with today
+        // Archive data doesn't have hours, so Golden Time is only today.
+        
+        // Golden Time (Today)
+        const hInc = {};
+        rL.forEach(l=>{ const h=new Date(l.ts).getHours(); if(!hInc[h])hInc[h]=0; hInc[h]+=(l.amt||0); });
+        let gTime="-", maxH=0;
+        for(const [h,v] of Object.entries(hInc)){ if(v>maxH){maxH=v; gTime=h+"시";} }
+        setText('recTime', gTime);
+
+        // Best Day (Archive + Today)
+        const dStats = {};
+        // Add Archive
+        d.arch.forEach(a=>{ 
+            const dy=new Date(a.date).getDay(); 
+            if(!dStats[dy]) dStats[dy]={sum:0, cnt:0}; 
+            dStats[dy].sum+=a.inc; dStats[dy].cnt+=1; 
+        });
+        // Add Today
+        const todayIdx = new Date().getDay();
+        if(!dStats[todayIdx]) dStats[todayIdx]={sum:0, cnt:0};
+        dStats[todayIdx].sum += inc; dStats[todayIdx].cnt += 1; // Treat today as 1 day entry
+
+        let bDay="-", maxD=0;
+        for(let i=0;i<7;i++){ 
+            if(dStats[i] && dStats[i].cnt>0) {
+                const avg = dStats[i].sum / dStats[i].cnt;
+                if(avg > maxD) { maxD=avg; bDay=['일','월','화','수','목','금','토'][i]+"요일"; }
+            }
+        }
+        setText('recDay', bDay);
+        
+        // Msg
+        $('aiCoachMsg').innerHTML = (bDay!=="-") ? `사장님은 <b>${bDay}</b>에 가장 많이 버십니다!` : "데이터 수집 중...";
+
+        const hList=$('hourList'); if(hList) { hList.innerHTML=''; const grp={}; rL.forEach(l=>{ const h=new Date(l.ts).getHours(); if(!grp[h])grp[h]={c:0}; grp[h].c++; }); Object.keys(hInc).sort((a,b)=>b-a).forEach(h=>{ hList.innerHTML+=`<div class="flex justify-between border-b border-gray-700 py-2"><span class="text-gray-400 font-mono text-xs w-10">${h}시</span><div class="flex gap-4"><span class="text-primary font-bold">${grp[h]?.c||0}건</span><span class="text-white w-16 text-right font-bold">${hInc[h].toLocaleString()}</span></div></div>`; }); } 
+        if(d.run.on && d.run.start) setText('insHour', ((Date.now() - d.run.start)/3600000 > 0.1) ? (rL.length/((Date.now() - d.run.start)/3600000)).toFixed(1) : "0.0"); 
+    }
+
+    function toggleRun() { d.run.on=!d.run.on; if(d.run.on){ d.run.start=Date.now(); startTimer(); toast("시작"); } else { clearInterval(timerInt); toast("종료"); } save(); updateRunUI(); }
+    function startTimer() { if(timerInt) clearInterval(timerInt); timerInt=setInterval(updateRunUI,1000); updateRunUI(); }
+    function updateRunUI() { const btn=$('runBtn'); if(!d.run.on) { btn.innerText="운행시작"; btn.className="bg-gray-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg"; $('trackStats').classList.add('hidden'); $('coachBox').classList.add('hidden'); $('liveDot').classList.add('hidden'); return; } $('trackStats').classList.remove('hidden'); $('coachBox').classList.remove('hidden'); $('liveDot').classList.remove('hidden'); btn.innerText="종료"; btn.className="bg-red-900/50 text-red-400 border border-red-900 px-4 py-2 rounded-lg text-xs font-bold shadow-lg"; const diff=Math.floor((Date.now()-d.run.start)/1000); const hh=String(Math.floor(diff/3600)).padStart(2,'0'); const mm=String(Math.floor((diff%3600)/60)).padStart(2,'0'); const ss=String(diff%60).padStart(2,'0'); setText('timer',`${hh}:${mm}:${ss}`); const completedCnt = d.logs.filter(l=>typeof l.s==='number'||l.s===999).length; const activeCnt = d.slots.filter(s => s > 0).length; const currentTotal = completedCnt + activeCnt; const tgtCnt = d.run.tCnt; const remCnt = tgtCnt - currentTotal; const now = new Date(); const [th, tm] = d.run.tTime.split(':'); const tgtDate = new Date(); tgtDate.setHours(th, tm, 0, 0); if(tgtDate < now) tgtDate.setDate(tgtDate.getDate() + 1); const remHr = (tgtDate - now) / 3600000; setText('uiTgtCnt', tgtCnt); setText('uiTgtTime', th); if (remCnt <= 0) { setText('uiMsg', "목표 달성 완료!"); $('uiMsg').className="text-xs font-bold mt-1 text-green-500"; } else if (remHr <= 0) { setText('uiMsg', "시간 종료"); $('uiMsg').className="text-xs font-bold mt-1 text-red-500"; } else { const pace = (remCnt / remHr).toFixed(1); setText('uiMsg', `시간당 ${pace}개 필요`); $('uiMsg').className = `text-xs font-bold mt-1 ${parseFloat(pace)>5?'text-red-400':'text-green-400'}`; } const nowH = new Date(); nowH.setMinutes(0,0,0); const hRecs = d.logs.filter(l => l.ts >= nowH.getTime() && typeof l.s==='number'); setText('valWage', hRecs.reduce((a,b)=>a+b.amt,0).toLocaleString()); setText('valPace', hRecs.length); setText('valGoal', Math.min(100, Math.round((d.logs.reduce((a,b)=>a+b.amt,0)/d.run.goal)*100))); }
+    function setStrategy() { const c = prompt("목표 건수", d.run.tCnt); if(c) d.run.tCnt=parseInt(c); const t = prompt("퇴근 시간 (예: 21:00)", d.run.tTime); if(t) d.run.tTime=t; save(); updateRunUI(); }
+    function setGoal() { const g = prompt("목표 금액", d.run.goal); if(g) d.run.goal=parseInt(g); save(); updateRunUI(); }
+    function initMap() { if(map)return; map=L.map('map',{zoomControl:false,attributionControl:false}).setView([37.5665,126.9780],13); L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{maxZoom:20}).addTo(map); poly=L.polyline([],{color:'#f97316',weight:5,opacity:0.8}).addTo(map); if(d.path.length){ poly.setLatLngs(d.path); d.path.forEach(p=>L.circleMarker(p,{color:'#f97316',fillColor:'#f97316',radius:3,stroke:false,fillOpacity:0.5}).addTo(map)); if(d.path.length>1)map.fitBounds(poly.getBounds()); } }
+    function startGPS() { if(!navigator.geolocation)return toast("GPS불가"); if(watchId)navigator.geolocation.clearWatch(watchId); const opt={enableHighAccuracy:true,maximumAge:0,timeout:15000}; watchId=navigator.geolocation.watchPosition(p=>{ const {latitude:lat,longitude:lng}=p.coords; curPos={lat,lng}; if(!map)initMap(); setText('weatherStatus',"GPS연결"); if(d.path.length>0){ const last=d.path[d.path.length-1]; const dist=6371*2*Math.atan2(Math.sqrt(Math.sin((lat-last[0])*Math.PI/360)**2+Math.cos(last[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin((lng-last[1])*Math.PI/360)**2),Math.sqrt(1-(Math.sin((lat-last[0])*Math.PI/360)**2+Math.cos(last[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin((lng-last[1])*Math.PI/360)**2))); if(dist>0.02){ d.dist+=dist; d.path.push([lat,lng]); poly.setLatLngs(d.path); L.circleMarker([lat,lng],{color:'#f97316',fillColor:'#f97316',radius:3,stroke:false,fillOpacity:0.5}).addTo(map); save(); } }else{ d.path.push([lat,lng]); } setText('uiDist',d.dist.toFixed(1)); }, e=>{ setText('weatherStatus',"GPS신호약함"); }, opt); }
+    function recenterMap() { if(map&&curPos.lat){ map.setView([curPos.lat,curPos.lng],16); }else toast("GPS확인중"); }
+    function checkDate() { if(d.date!==new Date().toDateString()){ const rL=d.logs.filter(l=>typeof l.s==='number'); if(rL.length>0)d.arch.push({date:d.date,count:rL.length,inc:d.logs.reduce((a,b)=>a+b.amt,0),dst:d.dist}); d.date=new Date().toDateString(); d.logs=[]; d.slots=[0,0,0,0,0,0]; d.dist=0; d.path=[]; d.doneMissions=[]; d.run.on=false; save(); render(); } }
+    function resetDay() { if(confirm("마감?")){ d.date="RESET"; checkDate(); } }
+    function backup() { const a=document.createElement('a'); a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(d)); a.download="Backup.json"; a.click(); }
+    function restore() { $('fileInput').click(); }
+    function loadBackupFile(inp) { const f=inp.files[0]; if(f){ const r=new FileReader(); r.onload=e=>{ if(confirm("복구?")){ d=JSON.parse(e.target.result); save(); location.reload(); }}; r.readAsText(f); } }
+    function go(n) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); $('p'+n).classList.add('active'); document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('nav-active')); $('n'+n).classList.add('nav-active'); if(n===3&&map){ setTimeout(()=>map.invalidateSize(),200); recenterMap(); } }
+</script>
+</body>
+</html>
