@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Delivery Master V57.6</title>
+    <title>Delivery Master V57.7</title>
     
     <link rel="manifest" href='data:application/manifest+json,{"name":"배달마스터","short_name":"배달마스터","start_url":".","display":"standalone","background_color":"#09090b","theme_color":"#09090b","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/726/726455.png","sizes":"512x512","type":"image/png"}]}'>
     <meta name="mobile-web-app-capable" content="yes">
@@ -36,7 +36,7 @@
         #mainScroll { 
             flex: 1; overflow-y: scroll; 
             -webkit-overflow-scrolling: touch; overscroll-behavior: contain; 
-            position: relative; z-index: 10; padding-bottom: 200px; 
+            position: relative; z-index: 10; padding-bottom: 150px; /* Extra padding for scroll */
             touch-action: pan-y;
         }
         .lovable-card { background-color: #18181b; border: 1px solid #27272a; border-radius: 12px; transition: transform 0.1s; position: relative; z-index: 20; user-select: none; -webkit-user-select: none; }
@@ -152,7 +152,7 @@
                 <div class="mb-2"><input type="date" id="newMsnDate" class="w-full bg-[#27272a] rounded-lg px-3 py-2 text-white text-xs border border-gray-700 text-center"></div>
             </div>
             <div class="flex-1 overflow-y-auto mb-4 pr-1">
-                <div class="text-xs font-bold text-gray-500 mb-2">진행 중</div><div id="activeMissionList" class="space-y-2 mb-6"></div>
+                <div class="text-xs font-bold text-gray-500 mb-2">진행 중 (시간순)</div><div id="activeMissionList" class="space-y-2 mb-6"></div>
                 <div class="text-xs font-bold text-gray-500 mb-2">성공 내역</div><div id="doneMissionList" class="space-y-2"></div>
             </div>
         </div>
@@ -161,7 +161,7 @@
     <header class="glass w-full px-5 py-3 shadow-lg shrink-0 z-50 pt-[calc(env(safe-area-inset-top)+12px)]">
         <div class="flex justify-between items-center mb-2">
             <h1 class="text-xl font-black italic tracking-tighter flex items-center select-none text-white" onclick="openGoalModal()">
-                <i class="fas fa-cube text-primary mr-2"></i>MASTER <span class="text-xs font-normal text-muted ml-1 not-italic">V57.6</span>
+                <i class="fas fa-cube text-primary mr-2"></i>MASTER <span class="text-xs font-normal text-muted ml-1 not-italic">V57.7</span>
             </h1>
             <div class="flex gap-2">
                 <button onclick="openMissionModal()" class="h-8 px-3 text-xs font-bold border border-secondary rounded-lg text-muted hover:text-white flex items-center"><i class="fas fa-flag-checkered mr-1"></i><span id="missionBtnTxt">미션</span></button>
@@ -208,7 +208,7 @@
                 </div>
             </div>
             <div id="slotGrid" class="grid grid-cols-2 gap-3 pb-8"></div>
-            <div class="h-20 w-full"></div>
+            <div class="h-32 w-full"></div>
         </div>
 
         <div id="p2" class="page">
@@ -271,12 +271,12 @@
     </nav>
 
 <script>
-    const KEY = 'masterV57_6'; 
+    const KEY = 'masterV57_7'; 
     const DEFAULT_DATA = { date: new Date().toDateString(), logs: [], arch: [], slots: [0,0,0,0,0,0], slotTs: [0,0,0,0,0,0], missions: [], doneMissions: [], dist: 0, path: [], run: {on:false, start:null, tCnt:40, tTime:"21:00"}, goals: { day: 30, week: 150, month: 500 }, expenses: [], markers: [] };
     let d = JSON.parse(JSON.stringify(DEFAULT_DATA));
     let map, poly, activeSlot=null, selW='sun', timerInt=null, watchId=null, curPos = {lat:null, lng:null};
     let isOffline = false;
-    let editMsnId = null; // Track Editing Mission
+    let editMsnId = null;
 
     const mainScroll = document.getElementById('mainScroll'); let touchStartY = 0;
     if(mainScroll) { mainScroll.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: false }); mainScroll.addEventListener('touchmove', e => { if (mainScroll.scrollTop <= 0 && (e.touches[0].clientY - touchStartY) > 0) e.preventDefault(); }, { passive: false }); }
@@ -290,7 +290,7 @@
     window.onload = () => {
         const saved = localStorage.getItem(KEY);
         if(saved) { try { d = { ...DEFAULT_DATA, ...JSON.parse(saved) }; } catch(e) {} } 
-        else { const old = localStorage.getItem('masterV57_5') || localStorage.getItem('masterV57_4'); if(old) { try { d = { ...d, ...JSON.parse(old) }; save(); } catch(e){} } }
+        else { const old = localStorage.getItem('masterV57_6') || localStorage.getItem('masterV57_5'); if(old) { try { d = { ...d, ...JSON.parse(old) }; save(); } catch(e){} } }
         if(!Array.isArray(d.missions)) d.missions = []; if(!Array.isArray(d.doneMissions)) d.doneMissions = []; if(!Array.isArray(d.slotTs)) d.slotTs = [0,0,0,0,0,0]; if(!d.goals) d.goals = { day: 30, week: 150, month: 500 }; if(!Array.isArray(d.expenses)) d.expenses = []; if(!Array.isArray(d.markers)) d.markers = [];
         checkDate(); render(); if(d.run.on) startTimer(); updateRunUI(); setTimeout(() => { if(navigator.onLine) { initMap(); startGPS(); } else { isOffline=true; } }, 1000); setInterval(checkDate, 60000);
     };
@@ -338,7 +338,8 @@
         if(editMsnId) { const idx=d.missions.findIndex(m=>m.id===editMsnId); if(idx!==-1) d.missions[idx]=newMsn; toast("수정됨"); editMsnId=null; $('msnBtn').innerText="등록"; $('msnBtn').classList.remove('bg-green-500'); }
         else { d.missions.push(newMsn); toast("등록됨"); }
         
-        d.missions.sort((a,b)=>a.tgt-b.tgt); $('newMsnTgt').value=''; $('newMsnRwd').value=''; save(); renderMissionList(); updateMissionUI(); 
+        d.missions.sort((a,b)=>a.startTs-b.startTs); // V57.7 Sort Fix
+        $('newMsnTgt').value=''; $('newMsnRwd').value=''; save(); renderMissionList(); updateMissionUI(); 
     }
     function removeMission(id) { if(confirm("삭제?")) { d.missions=d.missions.filter(m=>m.id!==id); save(); renderMissionList(); updateMissionUI(); } }
     function getMissionProgress(m) { let c=0; d.logs.forEach(l => { const checkTime = l.dispatchTs || l.ts; const isLog = typeof l.s==='number' || l.s===999; if(isLog && checkTime >= m.startTs && checkTime <= m.endTs) c++; }); d.slots.forEach((s, i) => { if(s > 0 && d.slotTs[i] >= m.startTs && d.slotTs[i] <= m.endTs) c++; }); return c; }
