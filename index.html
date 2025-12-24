@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Delivery Master V57.5</title>
+    <title>Delivery Master V57.6</title>
     
     <link rel="manifest" href='data:application/manifest+json,{"name":"배달마스터","short_name":"배달마스터","start_url":".","display":"standalone","background_color":"#09090b","theme_color":"#09090b","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/726/726455.png","sizes":"512x512","type":"image/png"}]}'>
     <meta name="mobile-web-app-capable" content="yes">
@@ -147,7 +147,7 @@
                     <input type="time" id="newMsnStart" class="flex-1 bg-[#27272a] rounded-lg px-2 py-2 text-white text-xs border border-gray-700 text-center">
                     <span class="text-gray-500">~</span>
                     <input type="time" id="newMsnEnd" class="flex-1 bg-[#27272a] rounded-lg px-2 py-2 text-white text-xs border border-gray-700 text-center">
-                    <button onclick="addMission()" class="bg-primary text-black font-bold rounded-lg px-4 py-2 text-xs active:scale-95">등록</button>
+                    <button onclick="addMission()" id="msnBtn" class="bg-primary text-black font-bold rounded-lg px-4 py-2 text-xs active:scale-95">등록</button>
                 </div>
                 <div class="mb-2"><input type="date" id="newMsnDate" class="w-full bg-[#27272a] rounded-lg px-3 py-2 text-white text-xs border border-gray-700 text-center"></div>
             </div>
@@ -161,7 +161,7 @@
     <header class="glass w-full px-5 py-3 shadow-lg shrink-0 z-50 pt-[calc(env(safe-area-inset-top)+12px)]">
         <div class="flex justify-between items-center mb-2">
             <h1 class="text-xl font-black italic tracking-tighter flex items-center select-none text-white" onclick="openGoalModal()">
-                <i class="fas fa-cube text-primary mr-2"></i>MASTER <span class="text-xs font-normal text-muted ml-1 not-italic">V57.5</span>
+                <i class="fas fa-cube text-primary mr-2"></i>MASTER <span class="text-xs font-normal text-muted ml-1 not-italic">V57.6</span>
             </h1>
             <div class="flex gap-2">
                 <button onclick="openMissionModal()" class="h-8 px-3 text-xs font-bold border border-secondary rounded-lg text-muted hover:text-white flex items-center"><i class="fas fa-flag-checkered mr-1"></i><span id="missionBtnTxt">미션</span></button>
@@ -271,24 +271,18 @@
     </nav>
 
 <script>
-    const KEY = 'masterV57_5'; 
+    const KEY = 'masterV57_6'; 
     const DEFAULT_DATA = { date: new Date().toDateString(), logs: [], arch: [], slots: [0,0,0,0,0,0], slotTs: [0,0,0,0,0,0], missions: [], doneMissions: [], dist: 0, path: [], run: {on:false, start:null, tCnt:40, tTime:"21:00"}, goals: { day: 30, week: 150, month: 500 }, expenses: [], markers: [] };
     let d = JSON.parse(JSON.stringify(DEFAULT_DATA));
     let map, poly, activeSlot=null, selW='sun', timerInt=null, watchId=null, curPos = {lat:null, lng:null};
     let isOffline = false;
+    let editMsnId = null; // Track Editing Mission
 
-    // Scroll Lock
-    const mainScroll = document.getElementById('mainScroll');
-    let touchStartY = 0;
-    if(mainScroll) {
-        mainScroll.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: false });
-        mainScroll.addEventListener('touchmove', e => { if (mainScroll.scrollTop <= 0 && (e.touches[0].clientY - touchStartY) > 0) e.preventDefault(); }, { passive: false });
-    }
+    const mainScroll = document.getElementById('mainScroll'); let touchStartY = 0;
+    if(mainScroll) { mainScroll.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: false }); mainScroll.addEventListener('touchmove', e => { if (mainScroll.scrollTop <= 0 && (e.touches[0].clientY - touchStartY) > 0) e.preventDefault(); }, { passive: false }); }
     document.body.addEventListener('touchmove', e => { if (!e.target.closest('#mainScroll')) e.preventDefault(); }, { passive: false });
-
     window.addEventListener('online', () => { isOffline=false; document.getElementById('offlineIndicator').style.display='none'; toast("온라인"); });
     window.addEventListener('offline', () => { isOffline=true; document.getElementById('offlineIndicator').style.display='block'; toast("오프라인"); });
-
     const $ = (id) => document.getElementById(id);
     const setText = (id, val) => { const el=$(id); if(el) el.innerText=val; };
     const toast = (msg) => { const t = $('toastContainer'); const el = document.createElement('div'); el.className = "bg-gray-800 text-white px-4 py-2 rounded mb-2 border border-gray-600 text-sm shadow-lg animate-[fadeIn_0.2s_ease-out]"; el.innerHTML = `<i class="fas fa-info-circle text-primary mr-2"></i>${msg}`; t.appendChild(el); setTimeout(()=> { el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 2000); };
@@ -296,72 +290,25 @@
     window.onload = () => {
         const saved = localStorage.getItem(KEY);
         if(saved) { try { d = { ...DEFAULT_DATA, ...JSON.parse(saved) }; } catch(e) {} } 
-        else { 
-            const old = localStorage.getItem('masterV57_4') || localStorage.getItem('masterV57_3') || localStorage.getItem('masterV57_2');
-            if(old) { try { d = { ...d, ...JSON.parse(old) }; save(); } catch(e){} }
-        }
-        if(!Array.isArray(d.missions)) d.missions = []; 
-        if(!Array.isArray(d.doneMissions)) d.doneMissions = [];
-        if(!Array.isArray(d.slotTs)) d.slotTs = [0,0,0,0,0,0];
-        if(!d.goals) d.goals = { day: 30, week: 150, month: 500 };
-        if(!Array.isArray(d.expenses)) d.expenses = [];
-        if(!Array.isArray(d.markers)) d.markers = [];
-        
-        checkDate(); render(); 
-        if(d.run.on) startTimer(); 
-        updateRunUI(); 
-        setTimeout(() => { if(navigator.onLine) { initMap(); startGPS(); } else { isOffline=true; } }, 1000);
-        setInterval(checkDate, 60000);
+        else { const old = localStorage.getItem('masterV57_5') || localStorage.getItem('masterV57_4'); if(old) { try { d = { ...d, ...JSON.parse(old) }; save(); } catch(e){} } }
+        if(!Array.isArray(d.missions)) d.missions = []; if(!Array.isArray(d.doneMissions)) d.doneMissions = []; if(!Array.isArray(d.slotTs)) d.slotTs = [0,0,0,0,0,0]; if(!d.goals) d.goals = { day: 30, week: 150, month: 500 }; if(!Array.isArray(d.expenses)) d.expenses = []; if(!Array.isArray(d.markers)) d.markers = [];
+        checkDate(); render(); if(d.run.on) startTimer(); updateRunUI(); setTimeout(() => { if(navigator.onLine) { initMap(); startGPS(); } else { isOffline=true; } }, 1000); setInterval(checkDate, 60000);
     };
-
     function save() { localStorage.setItem(KEY, JSON.stringify(d)); }
-
-    // Merge Logic (V57.4)
     function loadMergeFile(inp) { const f=inp.files[0]; if(!f)return; const r=new FileReader(); r.onload=e=>{ try { const oldData=JSON.parse(e.target.result); if(!oldData.arch) throw new Error("형식 오류"); const combinedArch=[...d.arch]; oldData.arch.forEach(oldA=>{ if(!combinedArch.find(currA=>currA.date===oldA.date)) combinedArch.push(oldA); }); combinedArch.sort((a,b)=>new Date(a.date)-new Date(b.date)); d.arch=combinedArch; if(oldData.goals) d.goals=oldData.goals; if(oldData.markers) d.markers=[...d.markers,...oldData.markers]; save(); alert(`복구 완료! (${oldData.arch.length}개)`); location.reload(); } catch(err) { alert("실패: "+err.message); } inp.value=''; }; r.readAsText(f); }
-
     function render() {
-        const realLogs = d.logs.filter(l => typeof l.s === 'number' || l.s === 999); 
-        const inc = d.logs.reduce((a,b)=>a+(b.amt||0),0); 
-        const cnt = realLogs.length;
-        const todayExp = d.expenses.filter(e => new Date(e.date).toDateString() === new Date().toDateString()).reduce((a,b) => a + b.amt, 0);
-        const net = inc - todayExp;
-
+        const realLogs = d.logs.filter(l => typeof l.s === 'number' || l.s === 999); const inc = d.logs.reduce((a,b)=>a+(b.amt||0),0); const cnt = realLogs.length; const todayExp = d.expenses.filter(e => new Date(e.date).toDateString() === new Date().toDateString()).reduce((a,b) => a + b.amt, 0); const net = inc - todayExp;
         setText('uiGrossRaw', inc.toLocaleString()); setText('uiExpRaw', "-" + todayExp.toLocaleString()); setText('uiNet', net.toLocaleString()); setText('uiCount', cnt);
-        
-        // [V57.5] Compact Slot Grid (h-20, text-2xl, mb-1)
-        const grid = $('slotGrid'); if(grid) { grid.innerHTML = ''; d.slots.forEach((s, i) => {
-            let cls="border-gray-800 text-gray-500 hover:bg-gray-800/50", ico="fa-box", txt="대기", anim="";
-            if(s===1) { cls="bg-primary/10 border-primary text-primary shadow-[0_0_15px_rgba(249,115,22,0.1)]"; ico="fa-motorcycle"; txt="픽업중"; anim="animate-pulse"; }
-            if(s===2) { cls="bg-green-500/10 border-green-500 text-green-500"; ico="fa-check-circle"; txt="배달중"; }
-            grid.innerHTML += `<div onmousedown="handleSlotStart(${i})" ontouchstart="handleSlotStart(${i})" onmouseup="handleSlotEnd(${i})" ontouchend="handleSlotEnd(${i})" oncontextmenu="return false;" class="lovable-card h-20 flex flex-col items-center justify-center border cursor-pointer active:scale-95 transition-all ${cls} select-none"><i class="fas ${ico} text-2xl mb-1 ${anim}"></i><span class="font-bold text-xs">${i+1}. ${txt}</span></div>`;
-        }); }
-
+        const grid = $('slotGrid'); if(grid) { grid.innerHTML = ''; d.slots.forEach((s, i) => { let cls="border-gray-800 text-gray-500 hover:bg-gray-800/50", ico="fa-box", txt="대기", anim=""; if(s===1) { cls="bg-primary/10 border-primary text-primary shadow-[0_0_15px_rgba(249,115,22,0.1)]"; ico="fa-motorcycle"; txt="픽업중"; anim="animate-pulse"; } if(s===2) { cls="bg-green-500/10 border-green-500 text-green-500"; ico="fa-check-circle"; txt="배달중"; } grid.innerHTML += `<div onmousedown="handleSlotStart(${i})" ontouchstart="handleSlotStart(${i})" onmouseup="handleSlotEnd(${i})" ontouchend="handleSlotEnd(${i})" oncontextmenu="return false;" class="lovable-card h-20 flex flex-col items-center justify-center border cursor-pointer active:scale-95 transition-all ${cls} select-none"><i class="fas ${ico} text-2xl mb-1 ${anim}"></i><span class="font-bold text-xs">${i+1}. ${txt}</span></div>`; }); }
         d.logs.sort((a,b) => b.ts - a.ts);
-        const list = $('logList'); if(list) { list.innerHTML = d.logs.length ? '' : '<div class="text-center text-xs text-gray-600 py-4">기록 없음</div>'; d.logs.forEach(l => {
-            const isB = l.s === '🎁'; const isM = l.s === 999;
-            const badge = isB ? '<span class="text-yellow-500 mr-2 font-bold">BONUS</span>' : (isM ? '<span class="text-gray-500 mr-2 font-bold">보정</span>' : `<span class="bg-gray-800 text-primary px-1.5 py-0.5 rounded mr-2 font-bold border border-gray-700">${l.s}</span>`);
-            if(l.amt > 0 || !isM) list.innerHTML += `<div onclick="openEditLog(${l.id})" class="flex justify-between p-3 rounded-lg border border-gray-800 mb-2 bg-[#202023] active:bg-gray-700 transition-colors cursor-pointer"><div class="flex items-center text-xs text-gray-400">${badge} ${l.time} ${!isB && !isM && l.w ? `<i class="fas fa-${l.w==='rain'?'umbrella':l.w} ml-2 text-gray-600"></i>` : ''}</div><div class="font-bold text-white tracking-wide">${l.amt.toLocaleString()} <i class="fas fa-chevron-right text-[8px] ml-1 text-gray-600"></i></div></div>`;
-        }); }
-
-        const arch = $('archList'); if(arch) { arch.innerHTML = d.arch.length ? '' : '<div class="text-center text-xs text-gray-600 py-4">이전 기록 없음</div>'; [...d.arch].reverse().forEach((a, idx) => {
-            const realIdx = d.arch.length - 1 - idx; 
-            arch.innerHTML += `<div onclick="openEditArch(${realIdx})" class="flex justify-between p-3 rounded border border-gray-800 mb-2 bg-gray-800/20 active:bg-gray-800/40 cursor-pointer"><div class="text-xs text-gray-400 font-bold flex flex-col justify-center"><span>${a.date}</span><span class="text-[9px] text-gray-600 font-normal">${getKORDay(a.date)}</span></div><div class="text-right"><div class="font-bold text-primary">${a.inc.toLocaleString()}원</div><div class="text-[10px] text-gray-500">${a.count}건 / ${(a.dst||0).toFixed(1)}km</div></div></div>`;
-        }); }
-        
+        const list = $('logList'); if(list) { list.innerHTML = d.logs.length ? '' : '<div class="text-center text-xs text-gray-600 py-4">기록 없음</div>'; d.logs.forEach(l => { const isB = l.s === '🎁'; const isM = l.s === 999; const badge = isB ? '<span class="text-yellow-500 mr-2 font-bold">BONUS</span>' : (isM ? '<span class="text-gray-500 mr-2 font-bold">보정</span>' : `<span class="bg-gray-800 text-primary px-1.5 py-0.5 rounded mr-2 font-bold border border-gray-700">${l.s}</span>`); if(l.amt > 0 || !isM) list.innerHTML += `<div onclick="openEditLog(${l.id})" class="flex justify-between p-3 rounded-lg border border-gray-800 mb-2 bg-[#202023] active:bg-gray-700 transition-colors cursor-pointer"><div class="flex items-center text-xs text-gray-400">${badge} ${l.time} ${!isB && !isM && l.w ? `<i class="fas fa-${l.w==='rain'?'umbrella':l.w} ml-2 text-gray-600"></i>` : ''}</div><div class="font-bold text-white tracking-wide">${l.amt.toLocaleString()} <i class="fas fa-chevron-right text-[8px] ml-1 text-gray-600"></i></div></div>`; }); }
+        const arch = $('archList'); if(arch) { arch.innerHTML = d.arch.length ? '' : '<div class="text-center text-xs text-gray-600 py-4">이전 기록 없음</div>'; [...d.arch].reverse().forEach((a, idx) => { const realIdx = d.arch.length - 1 - idx; arch.innerHTML += `<div onclick="openEditArch(${realIdx})" class="flex justify-between p-3 rounded border border-gray-800 mb-2 bg-gray-800/20 active:bg-gray-800/40 cursor-pointer"><div class="text-xs text-gray-400 font-bold flex flex-col justify-center"><span>${a.date}</span><span class="text-[9px] text-gray-600 font-normal">${getKORDay(a.date)}</span></div><div class="text-right"><div class="font-bold text-primary">${a.inc.toLocaleString()}원</div><div class="text-[10px] text-gray-500">${a.count}건 / ${(a.dst||0).toFixed(1)}km</div></div></div>`; }); }
         updateMissionUI(); updateRunUI(); renderInsights(); updateGoalProgress();
     }
 
     let pressTimer = null, isLongPress = false;
     function handleSlotStart(i) { isLongPress = false; pressTimer = setTimeout(() => { isLongPress = true; if(d.slots[i] !== 0) { d.slots[i] = 0; d.slotTs[i] = 0; save(); render(); navigator.vibrate?.(50); toast(`슬롯 ${i+1} 초기화`); } }, 500); }
-    function handleSlotEnd(i) { 
-        if(pressTimer) clearTimeout(pressTimer); 
-        if(!isLongPress) { 
-            if(d.slots[i]===0) { d.slots[i]=1; d.slotTs[i] = Date.now(); toast(`슬롯 ${i+1}: 픽업`); save(); render(); } 
-            else if(d.slots[i]===1) { d.slots[i]=2; save(); render(); } 
-            else if(d.slots[i]===2) { openCreateModal(i); } 
-        } 
-    }
-
+    function handleSlotEnd(i) { if(pressTimer) clearTimeout(pressTimer); if(!isLongPress) { if(d.slots[i]===0) { d.slots[i]=1; d.slotTs[i] = Date.now(); toast(`슬롯 ${i+1}: 픽업`); save(); render(); } else if(d.slots[i]===1) { d.slots[i]=2; save(); render(); } else if(d.slots[i]===2) { openCreateModal(i); } } }
     let targetSlot = null;
     function openCreateModal(i) { activeSlot = i; $('modalTitle').innerText = "배달 완료"; $('editLogId').value=""; $('editArchIdx').value=""; $('weatherSection').classList.remove('hidden'); $('btnDelete').classList.add('hidden'); const now=new Date(); $('modalTime').value=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; $('modalAmount').value=''; const realLogs=d.logs.filter(l=>typeof l.s==='number'); $('modalAmount').placeholder=realLogs.length>0?Math.round(realLogs.reduce((a,b)=>a+b.amt,0)/realLogs.length/100)*100:3500; $('completeModal').classList.add('show'); setTimeout(()=>$('modalAmount').focus(),200); if(!isOffline) getWeather(); }
     function openEditLog(id) { const log=d.logs.find(l=>l.id===id); if(!log)return; $('modalTitle').innerText="수정"; $('editLogId').value=id; $('editArchIdx').value=""; $('weatherSection').classList.add('hidden'); $('btnDelete').classList.remove('hidden'); $('modalAmount').value=log.amt; $('modalTime').value=log.time; $('completeModal').classList.add('show'); }
@@ -374,31 +321,30 @@
     function closeModal() { $('completeModal').classList.remove('show'); $('modalAmount').blur(); }
     function submitComplete() { const amt=parseInt($('modalAmount').value)||parseInt($('modalAmount').placeholder)||0; const timeStr=$('modalTime').value; const logId=$('editLogId').value; const archIdx=$('editArchIdx').value; if(logId) { const idx=d.logs.findIndex(l=>l.id==logId); if(idx!==-1) { d.logs[idx].amt=amt; d.logs[idx].time=timeStr; const [h,m]=timeStr.split(':'); const dt=new Date(d.logs[idx].ts); dt.setHours(h,m); d.logs[idx].ts=dt.getTime(); toast("수정됨"); } } else if(archIdx!=="") { d.arch[archIdx].inc=amt; const c=prompt("건수 수정",d.arch[archIdx].count); if(c) d.arch[archIdx].count=parseInt(c); toast("수정됨"); } else { const now=new Date(); const [h,m]=timeStr.split(':'); now.setHours(h,m); const dispatchTs = d.slotTs[activeSlot] || now.getTime(); d.logs.unshift({id:Date.now(), time:timeStr, ts:now.getTime(), dispatchTs: dispatchTs, amt:amt, s:activeSlot+1, w:selW, lat:curPos.lat, lng:curPos.lng}); d.slots[activeSlot]=0; d.slotTs[activeSlot]=0; checkMsn(); toast(`${amt}원 저장`); } closeModal(); save(); render(); }
     function deleteEntry() { if(!confirm("삭제?"))return; const logId=$('editLogId').value; const archIdx=$('editArchIdx').value; if(logId) d.logs=d.logs.filter(l=>l.id!=logId); toast("삭제됨"); closeModal(); save(); render(); }
-    
     function openMissionModal() { $('missionModal').classList.add('show'); renderMissionList(); }
-    function closeMissionModal() { $('missionModal').classList.remove('show'); }
-    function addMission() { const tgt=parseInt($('newMsnTgt').value); const rwd=parseInt($('newMsnRwd').value); const sTime = document.getElementById('newMsnStart').value; const eTime = document.getElementById('newMsnEnd').value; const dateVal = document.getElementById('newMsnDate').value; if(!tgt||!rwd || !sTime || !eTime) return toast("입력 필수"); const baseDate = dateVal ? new Date(dateVal) : new Date(); const startTs = new Date(baseDate.toDateString() + ' ' + sTime).getTime(); let endTs = new Date(baseDate.toDateString() + ' ' + eTime).getTime(); if(endTs < startTs) endTs += 86400000; d.missions.push({id: Date.now(), tgt: tgt, rwd: rwd, startTs: startTs, endTs: endTs, sStr: sTime, eStr: eTime, dateStr: baseDate.toDateString()}); d.missions.sort((a,b)=>a.tgt-b.tgt); $('newMsnTgt').value=''; $('newMsnRwd').value=''; save(); renderMissionList(); updateMissionUI(); }
+    function closeMissionModal() { $('missionModal').classList.remove('show'); editMsnId=null; $('msnBtn').innerText="등록"; $('msnBtn').classList.remove('bg-green-500'); $('newMsnTgt').value=''; $('newMsnRwd').value=''; $('newMsnStart').value=''; $('newMsnEnd').value=''; $('newMsnDate').value=''; }
+    function editMission(id) { const m=d.missions.find(x=>x.id===id); if(!m)return; editMsnId=id; $('newMsnTgt').value=m.tgt; $('newMsnRwd').value=m.rwd; $('newMsnStart').value=m.sStr; $('newMsnEnd').value=m.eStr; if(m.dateStr) { const date = new Date(m.dateStr); $('newMsnDate').value = date.toISOString().split('T')[0]; } $('msnBtn').innerText="수정"; $('msnBtn').classList.add('bg-green-500'); toast("수정 모드"); }
+    function addMission() { 
+        const tgt=parseInt($('newMsnTgt').value); const rwd=parseInt($('newMsnRwd').value); 
+        const sTime = document.getElementById('newMsnStart').value; const eTime = document.getElementById('newMsnEnd').value; const dateVal = document.getElementById('newMsnDate').value;
+        if(!tgt||!rwd || !sTime || !eTime) return toast("입력 필수"); 
+        const baseDate = dateVal ? new Date(dateVal) : new Date();
+        const startTs = new Date(baseDate.toDateString() + ' ' + sTime).getTime();
+        let endTs = new Date(baseDate.toDateString() + ' ' + eTime).getTime();
+        if(endTs < startTs) endTs += 86400000;
+        
+        const newMsn = {id: editMsnId || Date.now(), tgt: tgt, rwd: rwd, startTs: startTs, endTs: endTs, sStr: sTime, eStr: eTime, dateStr: baseDate.toDateString()};
+        
+        if(editMsnId) { const idx=d.missions.findIndex(m=>m.id===editMsnId); if(idx!==-1) d.missions[idx]=newMsn; toast("수정됨"); editMsnId=null; $('msnBtn').innerText="등록"; $('msnBtn').classList.remove('bg-green-500'); }
+        else { d.missions.push(newMsn); toast("등록됨"); }
+        
+        d.missions.sort((a,b)=>a.tgt-b.tgt); $('newMsnTgt').value=''; $('newMsnRwd').value=''; save(); renderMissionList(); updateMissionUI(); 
+    }
     function removeMission(id) { if(confirm("삭제?")) { d.missions=d.missions.filter(m=>m.id!==id); save(); renderMissionList(); updateMissionUI(); } }
     function getMissionProgress(m) { let c=0; d.logs.forEach(l => { const checkTime = l.dispatchTs || l.ts; const isLog = typeof l.s==='number' || l.s===999; if(isLog && checkTime >= m.startTs && checkTime <= m.endTs) c++; }); d.slots.forEach((s, i) => { if(s > 0 && d.slotTs[i] >= m.startTs && d.slotTs[i] <= m.endTs) c++; }); return c; }
-    function renderMissionList() { const act=$('activeMissionList'); const done=$('doneMissionList'); act.innerHTML=d.missions.length?'':'<div class="text-gray-600 text-xs">없음</div>'; d.missions.forEach(m=>{ const p=getMissionProgress(m); const timeLabel = `${m.dateStr ? m.dateStr.slice(4,10) : ''} ${m.sStr}~${m.eStr}`; act.innerHTML+=`<div class="flex justify-between items-center bg-[#27272a] p-3 rounded-lg border border-gray-700"><div class="flex flex-col"><div class="flex items-center"><span class="text-primary font-bold text-sm mr-1">${m.tgt}건</span><span class="bg-blue-900 text-blue-300 text-[9px] px-1 rounded ml-1">${timeLabel}</span></div><span class="text-gray-500 text-[10px]">진행: ${p}건</span></div><div class="flex items-center gap-3"><span class="text-white font-bold text-sm">+${m.rwd.toLocaleString()}</span><button onclick="removeMission(${m.id})" class="text-red-500 text-xs p-1"><i class="fas fa-trash"></i></button></div></div>`; }); done.innerHTML=d.doneMissions.length?'':'<div class="text-gray-600 text-xs">없음</div>'; d.doneMissions.forEach(m=>{ done.innerHTML+=`<div class="flex justify-between items-center bg-green-900/20 p-3 rounded-lg border border-green-900/50"><div class="text-green-500 font-bold text-xs"><i class="fas fa-check mr-1"></i>${m.tgt}건 달성</div><div class="text-white font-bold text-xs">+${m.rwd.toLocaleString()}원</div></div>`; }); }
+    function renderMissionList() { const act=$('activeMissionList'); const done=$('doneMissionList'); act.innerHTML=d.missions.length?'':'<div class="text-gray-600 text-xs">없음</div>'; d.missions.forEach(m=>{ const p=getMissionProgress(m); const timeLabel = `${m.dateStr ? m.dateStr.slice(4,10) : ''} ${m.sStr}~${m.eStr}`; act.innerHTML+=`<div class="flex justify-between items-center bg-[#27272a] p-3 rounded-lg border border-gray-700"><div class="flex flex-col"><div class="flex items-center"><span class="text-primary font-bold text-sm mr-1">${m.tgt}건</span><span class="bg-blue-900 text-blue-300 text-[9px] px-1 rounded ml-1">${timeLabel}</span></div><span class="text-gray-500 text-[10px]">진행: ${p}건</span></div><div class="flex items-center gap-3"><span class="text-white font-bold text-sm">+${m.rwd.toLocaleString()}</span><button onclick="editMission(${m.id})" class="text-green-500 text-xs p-1 mr-2"><i class="fas fa-pen"></i></button><button onclick="removeMission(${m.id})" class="text-red-500 text-xs p-1"><i class="fas fa-trash"></i></button></div></div>`; }); done.innerHTML=d.doneMissions.length?'':'<div class="text-gray-600 text-xs">없음</div>'; d.doneMissions.forEach(m=>{ done.innerHTML+=`<div class="flex justify-between items-center bg-green-900/20 p-3 rounded-lg border border-green-900/50"><div class="text-green-500 font-bold text-xs"><i class="fas fa-check mr-1"></i>${m.tgt}건 달성</div><div class="text-white font-bold text-xs">+${m.rwd.toLocaleString()}원</div></div>`; }); }
     function checkMsn() { const ach=[], rem=[]; d.missions.forEach(m=>{ const curCnt = getMissionProgress(m); if(curCnt >= m.tgt) ach.push(m); else rem.push(m); }); if(ach.length>0) { ach.forEach(m=>{ d.logs.unshift({id:Date.now(),time:"미션성공",ts:Date.now(),amt:m.rwd,s:'🎁',isBonus:true}); d.doneMissions.unshift({tgt:m.tgt,rwd:m.rwd,ts:Date.now()}); toast(`🎉 ${m.tgt}건 달성! +${m.rwd}`); }); d.missions=rem; save(); renderMissionList(); } updateMissionUI(); }
-    
-    // [V57.5] Mission Gauge: Show Remaining Count
-    function updateMissionUI() { 
-        const box=$('missionBox'); if(d.missions.length===0) { box.classList.add('hidden'); setText('missionBtnTxt','미션'); return; } 
-        box.classList.remove('hidden'); setText('missionBtnTxt','진행중'); 
-        box.innerHTML=''; 
-        d.missions.forEach(m=>{ 
-            const p=getMissionProgress(m); 
-            const pct=Math.min(100,(p/m.tgt)*100); 
-            const l=`${m.sStr}~${m.eStr}`; 
-            const remaining = Math.max(0, m.tgt - p);
-            const statusText = remaining > 0 ? `${remaining}개 남음` : '성공!';
-            
-            box.innerHTML+=`<div class="mb-1"><div class="flex justify-between text-[9px] text-gray-400 mb-0.5 px-1"><span>${l} <b class="text-white">${m.tgt}</b>건</span><span class="text-primary font-bold">${statusText}</span></div><div class="h-1.5 bg-secondary rounded-full overflow-hidden border border-white/5 relative"><div class="h-full bg-gradient-to-r from-orange-500 to-yellow-500" style="width:${pct}%"></div></div></div>`; 
-        }); 
-    }
-
+    function updateMissionUI() { const box=$('missionBox'); if(d.missions.length===0) { box.classList.add('hidden'); setText('missionBtnTxt','미션'); return; } box.classList.remove('hidden'); setText('missionBtnTxt','진행중'); box.innerHTML=''; d.missions.forEach(m=>{ const p=getMissionProgress(m); const pct=Math.min(100,(p/m.tgt)*100); const l=`${m.sStr}~${m.eStr}`; const remaining = Math.max(0, m.tgt - p); const statusText = remaining > 0 ? `${remaining}개 남음` : '성공!'; box.innerHTML+=`<div class="mb-1"><div class="flex justify-between text-[9px] text-gray-400 mb-0.5 px-1"><span>${l} <b class="text-white">${m.tgt}</b>건</span><span class="text-primary font-bold">${statusText}</span></div><div class="h-1.5 bg-secondary rounded-full overflow-hidden border border-white/5 relative"><div class="h-full bg-gradient-to-r from-orange-500 to-yellow-500" style="width:${pct}%"></div></div></div>`; }); }
     function setWeather(w) { selW=w; ['w-sun','w-cloud','w-rain','w-snow'].forEach(id=>$(id).classList.remove('border-primary','text-primary')); $('w-'+w).classList.add('border-primary','text-primary'); }
     async function getWeather() { if(isOffline||!curPos.lat) return setText('weatherStatus',"오프라인"); try { const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${curPos.lat}&longitude=${curPos.lng}&current_weather=true`); const json=await res.json(); const c=json.current_weather.weathercode; if(c<=3)setWeather('sun');else if(c>=71)setWeather('snow');else if(c>=51)setWeather('rain');else setWeather('cloud'); setText('weatherStatus',"날씨적용"); } catch(e){} }
     function getKORDay(dStr) { return ['일','월','화','수','목','금','토'][new Date(dStr).getDay()]; }
