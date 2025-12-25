@@ -3,42 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Delivery Master V57.7</title>
-    
+    <title>Delivery Master V57.7 (Final)</title>
     <link rel="manifest" href='data:application/manifest+json,{"name":"배달마스터","short_name":"배달마스터","start_url":".","display":"standalone","background_color":"#09090b","theme_color":"#09090b","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/726/726455.png","sizes":"512x512","type":"image/png"}]}'>
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#09090b">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: { extend: { colors: { bg: "#09090b", fg: "#fafafa", primary: "#f97316", secondary: "#27272a", muted: "#a1a1aa", card: "#18181b", success: "#22c55e", danger: "#ef4444", skull: "#a8a29e", honey: "#fbbf24" } } }
-        }
+        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { bg: "#09090b", fg: "#fafafa", primary: "#f97316", secondary: "#27272a", muted: "#a1a1aa", card: "#18181b", success: "#22c55e", danger: "#ef4444" } } } }
     </script>
     <style>
         html { overflow: hidden; height: 100%; overscroll-behavior: none; }
-        body { 
-            background-color: #09090b; color: #fafafa; 
-            padding-top: env(safe-area-inset-top); 
-            padding-bottom: env(safe-area-inset-bottom); 
-            overflow: hidden; height: 100%; height: 100dvh; 
-            width: 100%; position: fixed; 
-            display: flex; flex-direction: column; 
-            touch-action: none; user-select: none; -webkit-user-select: none;
-        }
+        body { background-color: #09090b; color: #fafafa; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); overflow: hidden; height: 100dvh; width: 100%; position: fixed; display: flex; flex-direction: column; touch-action: none; user-select: none; -webkit-user-select: none; }
         .glass { background: rgba(24, 24, 27, 0.98); border-bottom: 1px solid #27272a; z-index: 50; }
-        #mainScroll { 
-            flex: 1; overflow-y: scroll; 
-            -webkit-overflow-scrolling: touch; overscroll-behavior: contain; 
-            position: relative; z-index: 10; padding-bottom: 150px; /* Extra padding for scroll */
-            touch-action: pan-y;
-        }
+        #mainScroll { flex: 1; overflow-y: scroll; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; position: relative; z-index: 10; padding-bottom: 150px; touch-action: pan-y; }
         .lovable-card { background-color: #18181b; border: 1px solid #27272a; border-radius: 12px; transition: transform 0.1s; position: relative; z-index: 20; user-select: none; -webkit-user-select: none; }
         .lovable-card:active { transform: scale(0.98); }
         .nav-active { color: #f97316; } .nav-item { color: #71717a; transition: color 0.2s; }
@@ -54,11 +35,6 @@
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
         .combat-mode { border: 2px solid rgba(239, 68, 68, 0.6); animation: pulse-red 2s infinite; }
         @keyframes pulse-red { 0% { border-color: rgba(239, 68, 68, 0.6); } 50% { border-color: rgba(239, 68, 68, 1); } 100% { border-color: rgba(239, 68, 68, 0.6); } }
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .cal-cell { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-size: 10px; background: #27272a; color: #71717a; position: relative; }
-        .cal-cell.today { border: 1px solid #f97316; color: white; font-weight: bold; }
-        .cal-cell.has-data { background: #3f3f46; color: white; }
-        .cal-val { font-size: 8px; color: #f97316; margin-top: 2px; }
         input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
@@ -66,7 +42,6 @@
     </style>
 </head>
 <body class="h-[100dvh] flex flex-col overflow-hidden select-none overscroll-none">
-
     <div id="offlineIndicator" class="offline-banner"></div>
     <div id="toastContainer" class="fixed bottom-24 left-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
     <input type="file" id="fileInput" class="hidden" accept=".json" onchange="loadBackupFile(this)">
@@ -207,9 +182,9 @@
                     <div class="text-xs font-bold mt-1" id="uiMsg">분석 대기중...</div>
                 </div>
             </div>
+            
             <div id="slotGrid" class="grid grid-cols-2 gap-3 pb-8"></div>
-            <div class="h-32 w-full"></div>
-        </div>
+            <div class="h-40 w-full"></div> </div>
 
         <div id="p2" class="page">
             <div class="lovable-card p-4 border border-secondary bg-black/20 mb-4 flex gap-2">
@@ -217,7 +192,6 @@
                 <button onclick="$('mergeInput').click()" class="flex-1 bg-yellow-600/30 text-yellow-400 border border-yellow-600 font-bold text-xs py-2 rounded active:bg-yellow-600/50"><i class="fas fa-folder-open mr-1"></i>합치기</button>
                 <button onclick="restore()" class="flex-1 bg-gray-800 text-xs py-2 rounded text-green-400 border border-gray-700 font-bold active:bg-gray-700"><i class="fas fa-file-import mr-1"></i>복구</button>
             </div>
-            
             <button onclick="openDataDoctor()" class="w-full bg-gray-800 text-gray-500 text-[10px] py-1 mb-2 rounded">데이터 진단 도구 열기</button>
             
             <div class="lovable-card p-4 bg-gradient-to-br from-[#1e1e24] to-[#2a2a30] border border-gray-700 mb-4 shadow-xl">
@@ -270,7 +244,7 @@
         <button onclick="go(3)" id="n3" class="nav-item text-gray-500 flex flex-col items-center w-1/3 active:scale-90 transition-transform"><i class="fas fa-map-marked-alt text-lg mb-1"></i><span class="text-[10px] font-bold">지도</span></button>
     </nav>
 
-<script>
+    <script>
     const KEY = 'masterV57_7'; 
     const DEFAULT_DATA = { date: new Date().toDateString(), logs: [], arch: [], slots: [0,0,0,0,0,0], slotTs: [0,0,0,0,0,0], missions: [], doneMissions: [], dist: 0, path: [], run: {on:false, start:null, tCnt:40, tTime:"21:00"}, goals: { day: 30, week: 150, month: 500 }, expenses: [], markers: [] };
     let d = JSON.parse(JSON.stringify(DEFAULT_DATA));
@@ -338,7 +312,7 @@
         if(editMsnId) { const idx=d.missions.findIndex(m=>m.id===editMsnId); if(idx!==-1) d.missions[idx]=newMsn; toast("수정됨"); editMsnId=null; $('msnBtn').innerText="등록"; $('msnBtn').classList.remove('bg-green-500'); }
         else { d.missions.push(newMsn); toast("등록됨"); }
         
-        d.missions.sort((a,b)=>a.startTs-b.startTs); // V57.7 Sort Fix
+        d.missions.sort((a,b)=>a.startTs-b.startTs); 
         $('newMsnTgt').value=''; $('newMsnRwd').value=''; save(); renderMissionList(); updateMissionUI(); 
     }
     function removeMission(id) { if(confirm("삭제?")) { d.missions=d.missions.filter(m=>m.id!==id); save(); renderMissionList(); updateMissionUI(); } }
@@ -366,13 +340,12 @@
     function restore() { $('fileInput').click(); }
     function loadBackupFile(inp) { const f=inp.files[0]; if(f){ const r=new FileReader(); r.onload=e=>{ if(confirm("복구?")){ d=JSON.parse(e.target.result); save(); location.reload(); }}; r.readAsText(f); } }
     function go(n) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); $('p'+n).classList.add('active'); document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('nav-active')); $('n'+n).classList.add('nav-active'); if(n===3&&map){ setTimeout(()=>map.invalidateSize(),200); recenterMap(); } }
-    
     let doctorClickCount = 0;
     function openDataDoctor() { doctorClickCount++; if(doctorClickCount >= 5) { doctorClickCount = 0; scanForBackups(); $('doctorModal').classList.add('show'); } }
     function closeDoctorModal() { $('doctorModal').classList.remove('show'); }
-    function scanForBackups() { /* Same as V56.6 */ }
-    function recoverFromKey(k) { /* Same as V56.6 */ }
-    function addManualFix() { /* Same as V56.6 */ }
+    function scanForBackups() { const list = $('recoveryList'); list.innerHTML = ""; const keys = ['masterV57_7','masterV57_6','masterV57_5','masterV57_4','masterV57_3']; keys.forEach(k => { const data = localStorage.getItem(k); if(data) { try { const json = JSON.parse(data); const cnt = json.logs ? json.logs.filter(l=>typeof l.s==='number').length : 0; list.innerHTML += `<div class="flex justify-between items-center bg-black p-2 rounded border border-gray-700"><div><div class="text-primary font-bold">${k}</div><div class="text-gray-400">${json.date || '?'} / ${cnt}건</div></div><button onclick="recoverFromKey('${k}')" class="bg-gray-700 px-2 py-1 rounded text-white font-bold">복원</button></div>`; } catch(e){} } }); }
+    function recoverFromKey(k) { if(confirm("복원?")) { const d2=localStorage.getItem(k); if(d2){ d=JSON.parse(d2); save(); location.reload(); } } }
+    function addManualFix() { const cnt=parseInt($('fixCount').value); const amt=parseInt($('fixAmount').value); if(!cnt||!amt)return alert("입력하세요"); if(confirm(`${cnt}건, ${amt}원 추가?`)) { d.logs.unshift({id:Date.now(),time:"수동보정",ts:Date.now(),amt:amt,s:999,isManual:true}); for(let i=0;i<cnt-1;i++) d.logs.push({id:Date.now()+i+1,time:"보정",ts:Date.now(),amt:0,s:999}); save(); render(); closeDoctorModal(); } }
 </script>
 </body>
 </html>
