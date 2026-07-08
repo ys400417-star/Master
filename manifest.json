@@ -1,0 +1,16 @@
+{
+  "name": "배달마스터",
+  "short_name": "배달마스터",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/726/726455.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
