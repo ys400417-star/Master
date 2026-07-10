@@ -21,10 +21,10 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (NO_CACHE.some(h => url.hostname.includes(h))) return;
 
-  // 앱 본체(HTML)는 네트워크 우선 → 항상 최신 버전, 오프라인이면 캐시
+  // 앱 본체(HTML)는 네트워크 우선 + HTTP 캐시 재검증 → 항상 최신 버전, 오프라인이면 캐시
   if (req.mode === 'navigate' || url.pathname.endsWith('index.html')) {
     e.respondWith(
-      fetch(req).then(res => {
+      fetch(req, { cache: 'no-cache' }).then(res => {
         const copy = res.clone();
         caches.open(CACHE).then(c => c.put(req, copy));
         return res;
