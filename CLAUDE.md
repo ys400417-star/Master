@@ -35,6 +35,7 @@
 - 완료 모달은 열린 뒤 400ms간 저장/취소 무시 (오터치 방지, `modalGuardTs`)
 - 미션 진행: `max(startTs, createdTs)` 이후 배차만 카운트
 - 경로: GPS 점 간격이 300m 넘으면 OSRM(router.project-osrm.org)으로 도로 경로 보간
+- GPX 가져오기: 외부 GPS 기록 앱(GPSLogger 등)의 GPX 파일로 오늘 경로/주행거리를 교체 가능 (`loadGPXFile`)
 - 지도 레이어: 🔥 수익 히트맵(배송지 기준), 🪑 대기자리(배차 위치 기준), 꿀콜/기피지 마커
 
 ## 하지 말 것
