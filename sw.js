@@ -1,4 +1,4 @@
-const CACHE = 'delivery-master-v59-8';
+const CACHE = 'delivery-master-v59-9';
 const PRECACHE = ['./', './index.html', './manifest.json'];
 // 실시간 데이터(API·지도타일)는 캐시하지 않음
 const NO_CACHE = ['api.open-meteo.com', 'mt1.google.com', 'router.project-osrm.org', 'date.nager.at'];
