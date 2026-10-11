@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Delivery Master V60.10</title>
+<title>Delivery Master V60.11</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#09090b">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -71,6 +71,75 @@ body{padding:0;touch-action:auto}
 }
 @media(prefers-reduced-motion:reduce){.dispatch-slot:active{transform:none}}
 
+
+/* Keep mission controls separate from the scrolling list and form. */
+.mission-sheet{width:calc(100% - 24px);max-width:480px;height:min(720px,calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px));display:flex;flex-direction:column;min-height:0;background:#18181b;border:1px solid #3f3f46;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px #0009}
+.mission-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #27272a;flex-shrink:0}
+.mission-header h2{font-size:18px;font-weight:800;line-height:26px;margin:0;color:#fafafa}
+.mission-header p{font-size:11px;color:#a1a1aa;margin:2px 0 0}
+.mission-close{width:44px;height:44px;border-radius:12px;background:#27272a;color:#d4d4d8;flex-shrink:0}
+.mission-overview,.mission-editor{display:flex;flex-direction:column;flex:1;min-height:0}
+#missionOverview.hidden,#missionEditor.hidden,.mission-list.hidden{display:none}
+.mission-summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 16px}
+.mission-summary>div{min-width:0;display:flex;flex-direction:column;gap:3px}
+.mission-summary span{font-size:11px;color:#a1a1aa}
+.mission-summary strong{font-size:20px;line-height:26px;color:#fafafa;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+#missionEarned{color:#86efac}
+.mission-tabs{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:4px;padding:0 12px 10px;flex-shrink:0}
+.mission-tabs button{min-height:44px;border:1px solid #3f3f46;border-radius:10px;font-size:12px;font-weight:700;color:#a1a1aa}
+.mission-tabs button[aria-selected="true"]{background:#f973161a;border-color:#f97316;color:#fb923c}
+.mission-tabs span{font-size:10px;margin-left:2px}
+.mission-list-scroll,.mission-editor-scroll{flex:1;min-height:0;padding:0 16px 16px;overscroll-behavior:contain;scroll-padding-bottom:16px}
+.mission-count-note,.mission-field-note{font-size:11px;line-height:1.65;color:#a1a1aa;margin:0 0 12px}
+.mission-list{display:flex;flex-direction:column;gap:10px}
+.mission-card{padding:14px;border:1px solid #3f3f46;border-radius:14px;background:#202024}
+.mission-card.is-running{border-color:#f9731666}
+.mission-card.is-ready,.mission-card.is-done{border-color:#22c55e66;background:#152019}
+.mission-card-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.mission-badge{font-size:11px;font-weight:700;border-radius:6px;padding:3px 7px;background:#3f3f46;color:#d4d4d8}
+.mission-badge.running{background:#f9731626;color:#fdba74}
+.mission-badge.upcoming{background:#3b82f626;color:#93c5fd}
+.mission-badge.ready,.mission-badge.done{background:#22c55e26;color:#86efac}
+.mission-reward{font-size:17px;font-weight:800;color:#fafafa;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.mission-period{font-size:11px;color:#a1a1aa;line-height:1.7;margin-top:7px}
+.mission-progress-heading{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mission-remaining{font-size:22px;line-height:28px;font-weight:800;color:#fafafa}
+.mission-progress-count{font-size:12px;color:#a1a1aa;font-variant-numeric:tabular-nums}
+.mission-progress-track{height:6px;border-radius:999px;overflow:hidden;background:#09090b;margin-top:8px}
+.mission-progress-fill{height:100%;background:#f97316;border-radius:999px}
+.is-ready .mission-progress-fill{background:#22c55e}
+.mission-timing{font-size:11px;line-height:1.6;color:#a1a1aa;margin-top:8px}
+.mission-timing.is-urgent{color:#fca5a5}
+.mission-actions{display:flex;gap:8px;margin-top:10px}
+.mission-actions button{min-height:44px;padding:0 14px;font-size:12px;font-weight:700;border-radius:10px;background:#27272a;color:#d4d4d8;border:1px solid #3f3f46}
+.mission-actions .mission-delete{margin-left:auto;color:#fca5a5;background:transparent}
+.mission-empty{padding:28px 12px;text-align:center;border:1px dashed #3f3f46;border-radius:14px;color:#a1a1aa;font-size:12px;line-height:1.9}
+.mission-footer{display:flex;gap:8px;padding:12px 16px;border-top:1px solid #27272a;flex-shrink:0;background:#18181b}
+.mission-primary,.mission-secondary{min-height:48px;padding:10px 16px;border-radius:12px;font-size:14px;font-weight:800}
+.mission-primary{flex:1;background:#f97316;color:#09090b}
+.mission-secondary{background:#27272a;color:#d4d4d8;min-width:80px}
+.mission-editor-scroll{padding-top:16px}
+.mission-editor label{display:block;font-size:12px;font-weight:700;color:#d4d4d8;margin-bottom:7px}
+.mission-editor label span{font-size:10px;font-weight:400;color:#a1a1aa;margin-left:3px}
+.mission-editor input{display:block;box-sizing:border-box;width:100%;min-width:0;min-height:48px;background:#09090b;color:#fafafa;border:1px solid #3f3f46;border-radius:10px;padding:11px 10px;font-size:16px}
+.mission-editor input:focus{outline:2px solid #f97316;outline-offset:-1px}
+.mission-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mission-field-grid>div{min-width:0}
+.mission-field-note{margin-top:9px}
+.mission-date-label,.mission-duration-label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;margin-bottom:6px}
+.mission-date-label label{margin:0}
+.mission-date-actions{display:flex;gap:6px}
+.mission-date-actions button,.mission-duration-label button{min-height:44px;padding:0 12px;border:1px solid #3f3f46;border-radius:9px;color:#d4d4d8;font-size:12px}
+.mission-date-actions button[aria-pressed="true"]{border-color:#f97316;color:#fb923c;background:#f973161a}
+.mission-time-fields{margin-top:16px}
+.mission-duration-label span{font-size:11px;color:#a1a1aa}
+.mission-duration-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mission-duration-buttons button{min-height:44px;border:1px solid #3f3f46;border-radius:10px;background:#27272a;font-size:12px;color:#d4d4d8}
+.mission-time-hint{padding:12px;margin-top:14px;border-radius:10px;background:#f9731610;color:#fdba74;font-size:12px;line-height:1.7}
+.mission-form-error{color:#fca5a5;font-size:12px;line-height:1.6;margin-top:12px}
+.mission-sheet button:focus-visible{outline:2px solid #f97316;outline-offset:-2px}
+@media(max-height:560px){.mission-header{padding:6px 12px}.mission-summary{padding:8px 12px}.mission-summary strong{font-size:16px;line-height:20px}.mission-footer{padding:8px 12px}}
+
 </style>
 </head>
 <body class="h-[100dvh] flex flex-col overflow-hidden select-none overscroll-none">
@@ -97,11 +166,52 @@ body{padding:0;touch-action:auto}
 <div id="archiveModal" class="modal-overlay"><div class="bg-[#18181b] w-[90%] max-w-sm rounded-2xl border border-gray-800 p-6 shadow-2xl transform transition-all scale-100 h-[70vh] flex flex-col"><h3 class="text-lg font-bold text-white mb-4 text-center flex justify-between items-center"><span>아카이브 수정</span><button onclick="closeArchiveModal()" class="text-gray-500"><i class="fas fa-times"></i></button></h3><input type="hidden" id="archIdx" value="-1"><div class="mb-4"><label class="text-xs text-gray-400 font-bold mb-1 block">날짜</label><input type="date" id="archDate" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 text-white font-bold text-center"></div><div class="grid grid-cols-2 gap-3 mb-4"><div><label class="text-xs text-gray-400 font-bold mb-1 block">총 건수</label><input type="tel" id="archCount" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 text-white text-lg font-bold text-center"></div><div><label class="text-xs text-gray-400 font-bold mb-1 block">총 수입</label><input type="tel" id="archInc" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 text-white text-lg font-bold text-center"></div></div><div class="bg-gray-900 p-3 rounded-xl border border-gray-700 mb-4 flex-1 overflow-y-auto"><h4 class="text-xs font-bold text-primary mb-2"><i class="fas fa-plus-circle mr-1"></i>일괄 추가</h4><div class="flex gap-2 mb-2"><input type="tel" id="bulkCount" class="flex-1 bg-black border border-gray-600 rounded p-2 text-white text-center" placeholder="건수"><input type="tel" id="bulkAmount" class="flex-[2] bg-black border border-gray-600 rounded p-2 text-white text-center" placeholder="금액"></div><button onclick="applyBulkAdd()" class="w-full bg-gray-800 border border-gray-600 text-white font-bold py-2 rounded hover:bg-gray-700">합산하기</button></div><div class="flex gap-3 mt-auto"><button onclick="deleteArchive()" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 active:bg-red-700">삭제</button><button onclick="saveArchive()" class="flex-[2] py-3 rounded-xl font-bold text-black bg-primary">저장</button></div></div></div>
 <div id="doctorModal" class="modal-overlay"><div class="bg-[#18181b] w-full max-w-sm rounded-2xl border border-gray-800 p-5 shadow-2xl h-[80vh] flex flex-col"><h3 class="text-lg font-bold text-red-500 mb-4 flex justify-between items-center"><span>데이터 진단</span><button onclick="closeDoctorModal()" class="text-gray-500"><i class="fas fa-times"></i></button></h3><div class="flex-1 overflow-y-auto space-y-4"><div class="bg-gray-900 p-3 rounded-xl border border-gray-700"><h4 class="text-sm font-bold text-white mb-2">기록 복구</h4><div id="recoveryList" class="space-y-2 text-xs"></div></div><div class="bg-gray-900 p-3 rounded-xl border border-gray-700"><h4 class="text-sm font-bold text-white mb-2">수동 보정</h4><div class="flex gap-2 mb-2"><input type="tel" id="fixCount" class="flex-1 bg-black border border-gray-600 rounded p-2 text-white" placeholder="건수"><input type="tel" id="fixAmount" class="flex-1 bg-black border border-gray-600 rounded p-2 text-white" placeholder="금액"></div><button onclick="addManualFix()" class="w-full bg-blue-600 text-white font-bold py-2 rounded">강제 추가</button></div></div></div></div>
 <div id="completeModal" class="modal-overlay"><div class="bg-[#18181b] w-[90%] max-w-xs rounded-2xl border border-gray-800 p-6 shadow-2xl transform transition-all scale-100"><h3 class="text-lg font-bold text-white mb-4 text-center" id="modalTitle">완료</h3><input type="hidden" id="editLogId" value=""><input type="hidden" id="editArchIdx" value=""><div class="flex gap-2 mb-6"><div class="relative flex-[2]"><span class="absolute left-3 top-3.5 text-gray-500 font-bold text-lg">₩</span><input type="tel" id="modalAmount" inputmode="numeric" pattern="[0-9]*" class="w-full bg-[#27272a] border border-gray-700 rounded-xl p-3 pl-8 text-white text-xl font-black h-14" placeholder="0"></div><div class="relative flex-1"><input type="time" id="modalTime" class="w-full h-14 bg-[#27272a] border border-gray-700 rounded-xl px-1 text-white text-base font-bold text-center appearance-none"></div></div><div id="pickupSection" class="mb-4 hidden"><div class="text-[10px] text-gray-500 mb-1.5">🏪 상점이 어디였나요? <span class="text-gray-600">(안 골라도 됩니다)</span></div><div id="pickupList" class="space-y-1.5 max-h-32 overflow-y-auto"></div></div><div id="weatherSection" class="mb-4"><div class="grid grid-cols-4 gap-2"><button onclick="setWeather('sun')" id="w-sun" class="w-btn p-3 rounded-xl border border-gray-700 bg-gray-800 text-gray-400"><i class="fas fa-sun"></i></button><button onclick="setWeather('cloud')" id="w-cloud" class="w-btn p-3 rounded-xl border border-gray-700 bg-gray-800 text-gray-400"><i class="fas fa-cloud"></i></button><button onclick="setWeather('rain')" id="w-rain" class="w-btn p-3 rounded-xl border border-gray-700 bg-gray-800 text-gray-400"><i class="fas fa-umbrella"></i></button><button onclick="setWeather('snow')" id="w-snow" class="w-btn p-3 rounded-xl border border-gray-700 bg-gray-800 text-gray-400"><i class="fas fa-snowflake"></i></button></div></div><div class="flex gap-3"><button onclick="closeModal()" class="flex-1 py-3 rounded-xl font-bold text-gray-400 bg-gray-800 border border-gray-700">취소</button><button onclick="deleteEntry()" id="btnDelete" class="hidden flex-1 py-3 rounded-xl font-bold text-white bg-red-600">삭제</button><button onclick="submitComplete()" id="btnSave" class="flex-1 py-3 rounded-xl font-bold text-black bg-primary shadow-lg">저장</button></div></div></div>
-<div id="missionModal" class="modal-overlay"><div class="bg-[#18181b] w-full max-w-sm rounded-2xl border border-gray-800 p-5 shadow-2xl h-[85vh] flex flex-col"><h3 class="text-lg font-bold text-white mb-4 flex justify-between items-center"><span>미션 센터</span><button onclick="closeMissionModal()" class="text-gray-500"><i class="fas fa-times"></i></button></h3><div class="bg-gray-900 p-3 rounded-xl mb-4 border border-gray-800"><div class="text-xs text-primary font-bold mb-2">미션 등록 (날짜/시간)</div><div class="flex gap-2 mb-2"><input type="tel" id="newMsnTgt" class="flex-1 bg-[#27272a] rounded-lg px-3 py-2 text-white text-xs border border-gray-700" placeholder="목표 건수"><input type="tel" id="newMsnRwd" class="flex-1 bg-[#27272a] rounded-lg px-3 py-2 text-white text-xs border border-gray-700" placeholder="보상금"></div><div class="flex gap-2 items-center mb-1"><input type="time" id="newMsnStart" class="flex-1 bg-[#27272a] rounded-lg px-2 py-2 text-white text-xs border border-gray-700 text-center"><span class="text-gray-500">~</span><input type="time" id="newMsnEnd" class="flex-1 bg-[#27272a] rounded-lg px-2 py-2 text-white text-xs border border-gray-700 text-center"><button onclick="addMission()" id="msnBtn" class="bg-primary text-black font-bold rounded-lg px-4 py-2 text-xs active:scale-95">등록</button></div><div class="mb-2"><input type="date" id="newMsnDate" class="w-full bg-[#27272a] rounded-lg px-3 py-2 text-white text-xs border border-gray-700 text-center"></div></div><div class="flex-1 overflow-y-auto mb-4 pr-1"><div class="text-xs font-bold text-gray-500 mb-2">진행 중 (시간순)</div><div id="activeMissionList" class="space-y-2 mb-6"></div><div class="text-xs font-bold text-gray-500 mb-2">성공 내역</div><div id="doneMissionList" class="space-y-2"></div></div></div></div>
+
+<div id="missionModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="missionTitle">
+  <section class="mission-sheet">
+    <header class="mission-header"><div><h2 id="missionTitle">미션 센터</h2><p id="missionSubtitle">남은 건수와 보상을 한눈에</p></div><button type="button" onclick="closeMissionModal()" class="mission-close" aria-label="미션센터 닫기"><i class="fas fa-times" aria-hidden="true"></i></button></header>
+    <div id="missionOverview" class="mission-overview">
+      <div class="mission-summary"><div><span>진행·예정</span><strong id="missionOpenCount">0개</strong></div><div><span>달성 보상</span><strong id="missionEarned">0원</strong></div></div>
+      <div class="mission-tabs" role="tablist" aria-label="미션 상태">
+        <button type="button" id="missionTabLive" role="tab" aria-selected="true" aria-controls="activeMissionList" onclick="setMissionTab('live')">진행·예정 <span id="missionLiveCount">0</span></button>
+        <button type="button" id="missionTabDone" role="tab" aria-selected="false" aria-controls="doneMissionList" onclick="setMissionTab('done')">성공 <span id="missionDoneCount">0</span></button>
+        <button type="button" id="missionTabExpired" role="tab" aria-selected="false" aria-controls="expiredMissionList" onclick="setMissionTab('expired')">종료 <span id="missionExpiredCount">0</span></button>
+      </div>
+      <div id="missionListScroll" class="mission-list-scroll overflow-y-auto">
+        <p class="mission-count-note">등록 후 미션 시간 안에 받은 배차를 셉니다. 배달 중인 건도 포함돼요.</p>
+        <div id="activeMissionList" role="tabpanel" aria-labelledby="missionTabLive" class="mission-list"></div>
+        <div id="doneMissionList" role="tabpanel" aria-labelledby="missionTabDone" class="mission-list hidden"></div>
+        <div id="expiredMissionList" role="tabpanel" aria-labelledby="missionTabExpired" class="mission-list hidden"></div>
+      </div>
+      <footer class="mission-footer"><button type="button" onclick="beginMission()" class="mission-primary"><i class="fas fa-plus mr-1" aria-hidden="true"></i>새 미션</button></footer>
+    </div>
+    <form id="missionEditor" class="mission-editor hidden" onsubmit="event.preventDefault();addMission()">
+      <div id="missionEditorScroll" class="mission-editor-scroll overflow-y-auto">
+        <div class="mission-field-grid">
+          <div><label for="newMsnTgt">목표 건수 <span>건</span></label><input type="text" inputmode="numeric" maxlength="6" id="newMsnTgt" placeholder="예: 10" required></div>
+          <div><label for="newMsnRwd">총 보상금 <span>원</span></label><input type="text" inputmode="numeric" maxlength="13" id="newMsnRwd" placeholder="예: 15000" required></div>
+        </div>
+        <p class="mission-field-note">보상금에는 미션 전체를 달성했을 때 받는 금액을 입력하세요.</p>
+        <div class="mission-date-label"><label for="newMsnDate">시작 날짜</label><div class="mission-date-actions"><button type="button" id="missionDateToday" onclick="setMissionDate(0)">오늘</button><button type="button" id="missionDateTomorrow" onclick="setMissionDate(1)">내일</button></div></div>
+        <input type="date" id="newMsnDate" required onchange="updateMissionFormPreview()">
+        <div class="mission-field-grid mission-time-fields">
+          <div><label for="newMsnStart">시작 시간</label><input type="time" id="newMsnStart" required onchange="updateMissionFormPreview()"></div>
+          <div><label for="newMsnEnd">종료 시간</label><input type="time" id="newMsnEnd" required onchange="updateMissionFormPreview()"></div>
+        </div>
+        <div class="mission-duration-label"><span>시작부터 빠르게 설정</span><button type="button" onclick="setMissionStartNow()">지금 시작</button></div>
+        <div class="mission-duration-buttons"><button type="button" onclick="setMissionDuration(1)">1시간</button><button type="button" onclick="setMissionDuration(2)">2시간</button><button type="button" onclick="setMissionDuration(3)">3시간</button></div>
+        <p id="missionTimeHint" class="mission-time-hint"></p>
+        <p class="mission-field-note">종료가 시작보다 이르면 다음 날 종료로 설정됩니다.<br>미션을 수정해도 최초 등록 시각 이후의 배차를 계속 집계합니다.</p>
+        <p id="missionFormError" class="mission-form-error" role="alert"></p>
+      </div>
+      <footer class="mission-footer mission-editor-actions"><button type="button" onclick="cancelMissionEdit()" class="mission-secondary">취소</button><button type="submit" id="msnBtn" class="mission-primary">미션 등록</button></footer>
+    </form>
+  </section>
+</div>
 
 <div id="archDetailModal" class="modal-overlay"><div class="bg-[#18181b] w-[90%] max-w-sm rounded-2xl border border-gray-800 p-5 shadow-2xl h-[75vh] flex flex-col"><h3 class="text-lg font-bold text-white mb-1 flex justify-between items-center"><span id="archDetailTitle">상세 내역</span><button onclick="closeArchDetail()" class="text-gray-500"><i class="fas fa-times"></i></button></h3><div id="archDetailSummary" class="text-xs text-gray-400 mb-3 border-b border-gray-800 pb-2"></div><div id="archDetailList" class="flex-1 overflow-y-auto space-y-2 mb-3 pr-1"></div><button onclick="editFromDetail()" class="w-full py-3 rounded-xl font-bold text-black bg-primary shrink-0"><i class="fas fa-pen mr-1"></i>이 날짜 수정</button></div></div>
 
-<header id="appHeader" class="glass app-header"><h1 class="font-black italic text-white flex items-center gap-1.5"><i class="fas fa-cube text-primary" aria-hidden="true"></i>MASTER <span class="text-[10px] font-normal text-muted not-italic">V60.10</span></h1><button type="button" onclick="openMissionModal()" class="header-mission text-xs font-bold text-gray-300"><i class="fas fa-flag-checkered mr-1" aria-hidden="true"></i><span id="missionBtnTxt">미션</span></button></header>
+<header id="appHeader" class="glass app-header"><h1 class="font-black italic text-white flex items-center gap-1.5"><i class="fas fa-cube text-primary" aria-hidden="true"></i>MASTER <span class="text-[10px] font-normal text-muted not-italic">V60.11</span></h1><button type="button" onclick="openMissionModal()" class="header-mission text-xs font-bold text-gray-300"><i class="fas fa-flag-checkered mr-1" aria-hidden="true"></i><span id="missionBtnTxt">미션</span></button></header>
 
 <div id="mainScroll" class="bg-[#09090b]">
     <div id="p1" class="page active" aria-label="배차">
@@ -263,15 +373,192 @@ function renderLogLists(inc){const bonusInc=d.logs.filter(l=>l.s==='🎁').reduc
     function closeModal(){if(Date.now()-modalGuardTs<400)return;$('completeModal').classList.remove('show');$('modalAmount').blur()}
     function submitComplete(){if(Date.now()-modalGuardTs<400)return;const amt=parseInt($('modalAmount').value)||parseInt($('modalAmount').placeholder)||0;const timeStr=$('modalTime').value;const logId=$('editLogId').value;const archIdx=$('editArchIdx').value;if(logId){const idx=d.logs.findIndex(l=>l.id==logId);if(idx!==-1){d.logs[idx].amt=amt;d.logs[idx].time=timeStr;const[h,m]=timeStr.split(':');const dt=new Date(d.logs[idx].ts);dt.setHours(h,m);d.logs[idx].ts=dt.getTime();toast("수정됨")}}else if(archIdx!==""){d.arch[archIdx].inc=amt;const c=prompt("건수 수정",d.arch[archIdx].count);if(c)d.arch[archIdx].count=parseInt(c);toast("수정됨")}else{const now=new Date();const[h,m]=timeStr.split(':');now.setHours(h,m);const dispatchTs=d.slotTs[activeSlot]||now.getTime();const dl=(d.slotLoc&&d.slotLoc[activeSlot])||null;const pk=(pickedIdx>=0&&pickCands[pickedIdx])?pickCands[pickedIdx]:null;if(pk)learnStore(pk);d.logs.unshift({id:Date.now(),time:timeStr,ts:now.getTime(),dispatchTs:dispatchTs,amt:amt,s:activeSlot+1,w:selW,lat:curPos.lat,lng:curPos.lng,dLat:dl?dl.lat:null,dLng:dl?dl.lng:null,pLat:pk?pk.lat:null,pLng:pk?pk.lng:null,pTs:pk?pk.ts:null,pWait:pk?pk.sec:null});d.slots[activeSlot]=0;d.slotTs[activeSlot]=0;d.slotLoc[activeSlot]=null;checkMsn();checkRecords();toast(`${amt}원 저장`)}closeModal();save();render()}
     function deleteEntry(){if(Date.now()-modalGuardTs<400)return;if(!confirm("삭제?"))return;const logId=$('editLogId').value;const archIdx=$('editArchIdx').value;if(logId)d.logs=d.logs.filter(l=>l.id!=logId);toast("삭제됨");closeModal();save();render()}
-    function openMissionModal(){if(!$('newMsnDate').value)$('newMsnDate').value=new Date().toISOString().split('T')[0];$('missionModal').classList.add('show');renderMissionList()}
-    function closeMissionModal(){$('missionModal').classList.remove('show');editMsnId=null;$('msnBtn').innerText="등록";$('msnBtn').classList.remove('bg-green-500');$('newMsnTgt').value='';$('newMsnRwd').value='';$('newMsnStart').value='';$('newMsnEnd').value='';$('newMsnDate').value=''}
-    function editMission(id){const m=d.missions.find(x=>x.id===id);if(!m)return;editMsnId=id;$('newMsnTgt').value=m.tgt;$('newMsnRwd').value=m.rwd;$('newMsnStart').value=m.sStr;$('newMsnEnd').value=m.eStr;if(m.dateStr){const date=new Date(m.dateStr);$('newMsnDate').value=date.toISOString().split('T')[0]}$('msnBtn').innerText="수정";$('msnBtn').classList.add('bg-green-500');toast("수정 모드")}
-    function addMission(){const tgt=parseInt($('newMsnTgt').value);const rwd=parseInt($('newMsnRwd').value);const sTime=$('newMsnStart').value;const eTime=$('newMsnEnd').value;const dateVal=$('newMsnDate').value;if(!tgt||!rwd||!sTime||!eTime)return toast("입력 필수");const baseDate=dateVal?new Date(dateVal):new Date();const startTs=new Date(baseDate.toDateString()+' '+sTime).getTime();let endTs=new Date(baseDate.toDateString()+' '+eTime).getTime();if(endTs<startTs)endTs+=86400000;const orig=editMsnId?d.missions.find(m=>m.id===editMsnId):null;const newMsn={id:editMsnId||Date.now(),tgt:tgt,rwd:rwd,startTs:startTs,endTs:endTs,sStr:sTime,eStr:eTime,dateStr:baseDate.toDateString(),createdTs:orig&&orig.createdTs?orig.createdTs:Date.now()};if(editMsnId){const idx=d.missions.findIndex(m=>m.id===editMsnId);if(idx!==-1)d.missions[idx]=newMsn;toast("수정됨");editMsnId=null;$('msnBtn').innerText="등록";$('msnBtn').classList.remove('bg-green-500')}else{d.missions.push(newMsn);toast("등록됨")}d.missions.sort((a,b)=>a.startTs-b.startTs);$('newMsnTgt').value='';$('newMsnRwd').value='';save();renderMissionList();updateMissionUI()}
-    function removeMission(id){if(confirm("삭제?")){d.missions=d.missions.filter(m=>m.id!==id);save();renderMissionList();updateMissionUI()}}
+
+    let missionTab='live',missionEditorOpen=false,missionRefreshTimer=null;
+    function missionInputDate(date=new Date()){
+        return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+    }
+    function missionClock(date){
+        if(!Number.isFinite(date.getTime()))return '';
+        return String(date.getHours()).padStart(2,'0')+':'+String(date.getMinutes()).padStart(2,'0');
+    }
+    function missionStart(dateText,timeText){
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(dateText)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(timeText))return null;
+        const[y,mo,day]=dateText.split('-').map(Number),[h,mi]=timeText.split(':').map(Number);
+        const date=new Date(y,mo-1,day,h,mi,0,0);
+        return date.getFullYear()===y&&date.getMonth()===mo-1&&date.getDate()===day&&date.getHours()===h&&date.getMinutes()===mi?date:null;
+    }
+    function missionPeriod(dateText,startText,endText){
+        const start=missionStart(dateText,startText),end=missionStart(dateText,endText);
+        if(!start||!end||start.getTime()===end.getTime())return null;
+        if(end<start)end.setDate(end.getDate()+1);
+        return {startTs:start.getTime(),endTs:end.getTime(),dateStr:start.toDateString()};
+    }
+    function missionDayLabel(ts,now=Date.now()){
+        const date=new Date(ts),today=new Date(now),tomorrow=new Date(now);tomorrow.setDate(tomorrow.getDate()+1);
+        if(!Number.isFinite(date.getTime()))return '날짜 확인';
+        if(date.toDateString()===today.toDateString())return '오늘';
+        if(date.toDateString()===tomorrow.toDateString())return '내일';
+        return (date.getFullYear()!==today.getFullYear()?date.getFullYear()+'/':'')+(date.getMonth()+1)+'/'+date.getDate();
+    }
+    function missionRange(m,now=Date.now()){
+        const start=new Date(m.startTs),end=new Date(m.endTs);
+        const endDay=start.toDateString()===end.toDateString()?'':missionDayLabel(m.endTs,now)+' ';
+        return missionDayLabel(m.startTs,now)+' '+missionClock(start)+' → '+endDay+missionClock(end);
+    }
+    function missionWait(ms){
+        const mins=Math.max(0,Math.ceil(ms/60000));
+        if(mins>=1440)return Math.floor(mins/1440)+'일 '+Math.floor(mins%1440/60)+'시간';
+        return mins>=60?Math.floor(mins/60)+'시간'+(mins%60?' '+mins%60+'분':''):mins+'분';
+    }
+    function getMissionView(now=Date.now()){
+        const rows=d.missions.map(m=>{
+            const progress=getMissionProgress(m),remaining=Math.max(0,Number(m.tgt)-progress);
+            const phase=Number(m.tgt)>0&&progress>=Number(m.tgt)?'ready':m.endTs<now?'expired':m.startTs>now?'upcoming':'running';
+            return {m,progress,remaining,phase};
+        });
+        const order={ready:0,running:1,upcoming:2,expired:3};
+        rows.sort((a,b)=>order[a.phase]-order[b.phase]||(a.phase==='upcoming'?a.m.startTs-b.m.startTs:a.m.endTs-b.m.endTs));
+        return {live:rows.filter(r=>r.phase!=='expired'),expired:rows.filter(r=>r.phase==='expired'),now};
+    }
+    function setMissionEditor(open){
+        missionEditorOpen=open;
+        $('missionOverview').classList.toggle('hidden',open);$('missionEditor').classList.toggle('hidden',!open);
+        setText('missionTitle',open?(editMsnId!==null?'미션 수정':'새 미션'):'미션 센터');
+        setText('missionSubtitle',open?'목표 건수·총 보상·시간을 설정하세요':'남은 건수와 보상을 한눈에');
+        setText('msnBtn',editMsnId!==null?'수정 저장':'미션 등록');
+    }
+    function openMissionModal(){
+        $('missionModal').classList.add('show');setMissionEditor(missionEditorOpen);
+        if(missionEditorOpen)updateMissionFormPreview();else renderMissionList();
+        if(missionRefreshTimer)clearInterval(missionRefreshTimer);
+        missionRefreshTimer=setInterval(updateMissionUI,30000);
+    }
+    function closeMissionModal(){
+        $('missionModal').classList.remove('show');
+        ['newMsnTgt','newMsnRwd','newMsnDate','newMsnStart','newMsnEnd'].forEach(id=>$(id).blur());
+        if(missionRefreshTimer)clearInterval(missionRefreshTimer);missionRefreshTimer=null;
+    }
+    function beginMission(templateId=null){
+        const source=templateId!==null?d.missions.find(m=>m.id===templateId):null;
+        if(templateId!==null&&!source)return toast('미션을 찾을 수 없어요');
+        editMsnId=null;setMissionEditor(true);
+        $('newMsnTgt').value=source?source.tgt:'';$('newMsnRwd').value=source?source.rwd:'';
+        setText('missionFormError','');setMissionStartNow();
+        $('missionEditorScroll').scrollTop=0;$('newMsnTgt').focus();
+    }
+    function cancelMissionEdit(){
+        editMsnId=null;setMissionEditor(false);setText('missionFormError','');
+        ['newMsnTgt','newMsnRwd','newMsnDate','newMsnStart','newMsnEnd'].forEach(id=>{$(id).value=''});
+        renderMissionList();
+    }
+    function editMission(id){
+        const m=d.missions.find(x=>x.id===id);if(!m)return toast('미션을 찾을 수 없어요');
+        editMsnId=id;setMissionEditor(true);
+        $('newMsnTgt').value=m.tgt;$('newMsnRwd').value=m.rwd;
+        $('newMsnDate').value=missionInputDate(new Date(m.startTs));
+        $('newMsnStart').value=missionClock(new Date(m.startTs));$('newMsnEnd').value=missionClock(new Date(m.endTs));
+        setText('missionFormError','');updateMissionFormPreview();$('missionEditorScroll').scrollTop=0;
+    }
+    function setMissionDate(offset){
+        if(![0,1].includes(offset))return;
+        const date=new Date();date.setDate(date.getDate()+offset);$('newMsnDate').value=missionInputDate(date);
+        setText('missionFormError','');updateMissionFormPreview();
+    }
+    function setMissionStartNow(){
+        const now=new Date();$('newMsnDate').value=missionInputDate(now);$('newMsnStart').value=missionClock(now);
+        setMissionDuration(2);
+    }
+    function setMissionDuration(hours){
+        if(![1,2,3].includes(hours))return;
+        const start=missionStart($('newMsnDate').value,$('newMsnStart').value);
+        if(!start)return setText('missionFormError','시작 날짜와 시간을 먼저 선택해 주세요.');
+        start.setHours(start.getHours()+hours);$('newMsnEnd').value=missionClock(start);
+        setText('missionFormError','');updateMissionFormPreview();
+    }
+    function updateMissionFormPreview(){
+        const today=new Date(),tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);
+        $('missionDateToday').setAttribute('aria-pressed',String($('newMsnDate').value===missionInputDate(today)));
+        $('missionDateTomorrow').setAttribute('aria-pressed',String($('newMsnDate').value===missionInputDate(tomorrow)));
+        const period=missionPeriod($('newMsnDate').value,$('newMsnStart').value,$('newMsnEnd').value);
+        const text=period?missionRange(period)+(period.endTs<=Date.now()?' · 이미 종료된 시간입니다':' · '+missionWait(period.endTs-period.startTs)+' 미션'):'시작 날짜와 서로 다른 시작·종료 시간을 선택해 주세요.';
+        setText('missionTimeHint',text);
+    }
+    function addMission(){
+        if(!missionEditorOpen)return;
+        const target=parseStrategyNumber(String($('newMsnTgt').value),99999);
+        const reward=parseStrategyNumber(String($('newMsnRwd').value),999999999);
+        if(target===null||target<=0){setText('missionFormError','목표 건수는 1~99,999건으로 입력해 주세요.');$('newMsnTgt').focus();return}
+        if(reward===null||reward<=0){setText('missionFormError','총 보상금은 1~999,999,999원으로 입력해 주세요.');$('newMsnRwd').focus();return}
+        const startText=$('newMsnStart').value,endText=$('newMsnEnd').value;
+        const period=missionPeriod($('newMsnDate').value,startText,endText);
+        if(!period)return setText('missionFormError','날짜와 시간을 확인해 주세요. 시작과 종료 시간은 달라야 합니다.');
+        const original=editMsnId!==null?d.missions.find(m=>m.id===editMsnId):null;
+        if(editMsnId!==null&&!original)return setText('missionFormError','이 미션은 이미 처리되었거나 삭제됐어요. 취소 후 목록을 확인해 주세요.');
+        const now=Date.now();
+        if(!original&&period.endTs<=now)return setText('missionFormError','이미 끝난 미션입니다. 종료 시간이나 날짜를 변경해 주세요.');
+        let id=original?original.id:now;
+        if(!original)while(d.missions.some(m=>m.id===id))id++;
+        const mission={...(original||{}),id,tgt:target,rwd:reward,...period,sStr:startText,eStr:endText,createdTs:original?(original.createdTs||0):now};
+        if(original)d.missions[d.missions.findIndex(m=>m.id===original.id)]=mission;else d.missions.push(mission);
+        d.missions.sort((a,b)=>a.startTs-b.startTs);
+        missionTab=period.endTs<now&&getMissionProgress(mission)<target?'expired':'live';
+        editMsnId=null;setMissionEditor(false);setText('missionFormError','');
+        save();render();renderMissionList();$('missionListScroll').scrollTop=0;
+        toast(original?'미션 수정됨':'미션 등록됨');
+    }
+    function removeMission(id){
+        const mission=d.missions.find(m=>m.id===id);if(!mission)return;
+        if(!confirm(mission.tgt+'건 · '+Number(mission.rwd).toLocaleString()+'원 미션을 삭제할까요?'))return;
+        d.missions=d.missions.filter(m=>m.id!==id);
+        if(editMsnId===id){editMsnId=null;setMissionEditor(false)}
+        save();render();renderMissionList();toast('미션 삭제됨');
+    }
+    function setMissionTab(tab){
+        if(!['live','done','expired'].includes(tab))return;
+        missionTab=tab;renderMissionList();$('missionListScroll').scrollTop=0;
+    }
+    function missionCard(row,now){
+        const {m,progress,remaining,phase}=row;
+        const target=Number(m.tgt)||0,reward=Number(m.rwd)||0,id=Number(m.id);
+        const label={ready:'건수 충족',running:'진행 중',upcoming:'시작 예정',expired:'시간 종료'}[phase];
+        const pct=target>0?Math.max(0,Math.min(100,progress/target*100)):0;
+        const headline=phase==='ready'?'목표 건수 충족':remaining.toLocaleString()+'건 '+(phase==='expired'?'부족':'남음');
+        const timing=phase==='ready'?'보상은 배달 완료 처리 시 반영돼요.':phase==='expired'?'종료된 미션입니다. 다시 등록할 수 있어요.':phase==='upcoming'?'시작까지 '+missionWait(m.startTs-now):'종료까지 '+missionWait(m.endTs-now);
+        const urgent=phase==='running'&&m.endTs-now<=30*60000;
+        return '<article class="mission-card is-'+phase+'"><div class="mission-card-top"><span class="mission-badge '+phase+'">'+label+'</span><span class="mission-reward">+'+reward.toLocaleString()+'원</span></div>'+
+          '<div class="mission-period">'+missionRange(m,now)+'</div><div class="mission-progress-heading"><strong class="mission-remaining">'+headline+'</strong><span class="mission-progress-count">'+progress+' / '+target+'건</span></div>'+
+          '<div class="mission-progress-track" role="progressbar" aria-label="미션 달성률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(pct)+'"><div class="mission-progress-fill" style="width:'+pct+'%"></div></div>'+
+          '<p class="mission-timing'+(urgent?' is-urgent':'')+'">'+timing+'</p><div class="mission-actions">'+
+          (phase==='expired'?'<button type="button" onclick="beginMission('+id+')">다시 등록</button>':'')+
+          '<button type="button" onclick="editMission('+id+')">수정</button><button type="button" class="mission-delete" onclick="removeMission('+id+')">삭제</button></div></article>';
+    }
+    function renderMissionList(view=getMissionView()){
+        const earned=d.doneMissions.reduce((sum,m)=>sum+(Number(m.rwd)||0),0);
+        setText('missionOpenCount',view.live.length+'개');setText('missionEarned',earned.toLocaleString()+'원');
+        setText('missionLiveCount',view.live.length);setText('missionDoneCount',d.doneMissions.length);setText('missionExpiredCount',view.expired.length);
+        const empty=message=>'<div class="mission-empty">'+message+'</div>';
+        $('activeMissionList').innerHTML=view.live.length?view.live.map(row=>missionCard(row,view.now)).join(''):empty('진행 중이거나 예정된 미션이 없어요.<br>아래 새 미션 버튼으로 등록해 주세요.');
+        $('expiredMissionList').innerHTML=view.expired.length?view.expired.map(row=>missionCard(row,view.now)).join(''):empty('시간이 종료된 미션이 없어요.');
+        $('doneMissionList').innerHTML=d.doneMissions.length?[...d.doneMissions].sort((a,b)=>b.ts-a.ts).map(m=>
+          '<article class="mission-card is-done"><div class="mission-card-top"><span class="mission-badge done">달성 완료</span><strong class="mission-reward">+'+(Number(m.rwd)||0).toLocaleString()+'원</strong></div><div class="mission-period">'+missionDayLabel(m.ts,view.now)+' '+missionClock(new Date(m.ts))+' · '+(Number(m.tgt)||0)+'건 달성</div></article>').join(''):empty('아직 달성한 미션이 없어요.<br>달성 보상은 여기에 표시됩니다.');
+        for(const [tab,button,panel] of [['live','missionTabLive','activeMissionList'],['done','missionTabDone','doneMissionList'],['expired','missionTabExpired','expiredMissionList']]){
+            $(button).setAttribute('aria-selected',String(tab===missionTab));$(panel).classList.toggle('hidden',tab!==missionTab);
+        }
+    }
+    function updateMissionUI(){
+        const view=getMissionView(),box=$('missionBox');
+        setText('missionBtnTxt',view.live.length?'미션 '+view.live.length:'미션');
+        box.classList.toggle('hidden',view.live.length===0);
+        box.innerHTML=view.live.map(({m,remaining,phase})=>{
+            const label=phase==='upcoming'?'예정':phase==='ready'?'건수 충족':remaining+'건 남음';
+            return '<button type="button" onclick="openMissionModal()" class="w-full min-h-[44px] rounded-xl bg-black/30 border border-gray-700 px-3 py-2 text-left"><span class="flex flex-wrap justify-between gap-1 text-xs"><b class="text-primary">'+label+'</b><b class="text-white">+'+(Number(m.rwd)||0).toLocaleString()+'원</b></span><span class="block text-[10px] text-gray-400 mt-1">'+missionRange(m,view.now)+'</span></button>';
+        }).join('');
+        if($('missionModal').classList.contains('show')&&!missionEditorOpen)renderMissionList(view);
+    }
+
     function getMissionProgress(m){const from=Math.max(m.startTs,m.createdTs||0);let c=0;d.logs.forEach(l=>{const checkTime=l.dispatchTs||l.ts;const isLog=typeof l.s==='number'||l.s===999;if(isLog&&checkTime>=from&&checkTime<=m.endTs)c++});d.slots.forEach((s,i)=>{if(s>0&&d.slotTs[i]>=from&&d.slotTs[i]<=m.endTs)c++});return c}
-    function renderMissionList(){const act=$('activeMissionList');const done=$('doneMissionList');act.innerHTML=d.missions.length?'':'<div class="text-gray-600 text-xs">없음</div>';d.missions.forEach(m=>{const p=getMissionProgress(m);const expired=m.endTs<Date.now()&&p<m.tgt;const timeLabel=`${m.dateStr?m.dateStr.slice(4,10):''} ${m.sStr}~${m.eStr}`;act.innerHTML+=`<div class="flex justify-between items-center bg-[#27272a] p-3 rounded-lg border ${expired?'border-red-900/50 opacity-60':'border-gray-700'}"><div class="flex flex-col"><div class="flex items-center"><span class="text-primary font-bold text-sm mr-1">${m.tgt}건</span><span class="${expired?'bg-red-900 text-red-300':'bg-blue-900 text-blue-300'} text-[9px] px-1 rounded ml-1">${timeLabel}${expired?' 만료':''}</span></div><span class="text-gray-500 text-[10px]">진행: ${p}건</span></div><div class="flex items-center gap-3"><span class="text-white font-bold text-sm">+${m.rwd.toLocaleString()}</span><button onclick="editMission(${m.id})" class="text-green-500 text-xs p-1 mr-2"><i class="fas fa-pen"></i></button><button onclick="removeMission(${m.id})" class="text-red-500 text-xs p-1"><i class="fas fa-trash"></i></button></div></div>`});done.innerHTML=d.doneMissions.length?'':'<div class="text-gray-600 text-xs">없음</div>';d.doneMissions.forEach(m=>{done.innerHTML+=`<div class="flex justify-between items-center bg-green-900/20 p-3 rounded-lg border border-green-900/50"><div class="text-green-500 font-bold text-xs"><i class="fas fa-check mr-1"></i>${m.tgt}건 달성</div><div class="text-white font-bold text-xs">+${m.rwd.toLocaleString()}원</div></div>`})}
     function checkMsn(){const ach=[],rem=[];d.missions.forEach(m=>{const curCnt=getMissionProgress(m);if(curCnt>=m.tgt)ach.push(m);else rem.push(m)});if(ach.length>0){ach.forEach(m=>{d.logs.unshift({id:Date.now()+Math.floor(Math.random()*10000),time:"미션성공",ts:Date.now(),amt:m.rwd,s:'🎁',isBonus:true});d.doneMissions.unshift({tgt:m.tgt,rwd:m.rwd,ts:Date.now()});toast(`🎉 ${m.tgt}건 달성! +${m.rwd}`)});d.missions=rem;save();renderMissionList()}updateMissionUI()}
-    function updateMissionUI(){const box=$('missionBox');const activeMsns=d.missions.filter(m=>m.endTs>=Date.now());if(activeMsns.length===0){box.classList.add('hidden');setText('missionBtnTxt','미션');return}box.classList.remove('hidden');setText('missionBtnTxt','진행중');box.innerHTML='';activeMsns.forEach(m=>{const p=getMissionProgress(m);const pct=Math.min(100,(p/m.tgt)*100);const l=`${m.sStr}~${m.eStr}`;const remaining=Math.max(0,m.tgt-p);const statusText=remaining>0?`${remaining}개 남음`:'성공!';box.innerHTML+=`<div class="mb-1"><div class="flex justify-between text-[9px] text-gray-400 mb-0.5 px-1"><span>${l} <b class="text-white">${m.tgt}</b>건</span><span class="text-primary font-bold">${statusText}</span></div><div class="h-1.5 bg-secondary rounded-full overflow-hidden border border-white/5 relative"><div class="h-full bg-gradient-to-r from-orange-500 to-yellow-500" style="width:${pct}%"></div></div></div>`})}
     function setWeather(w){selW=w;['w-sun','w-cloud','w-rain','w-snow'].forEach(id=>$(id).classList.remove('border-primary','text-primary'));$('w-'+w).classList.add('border-primary','text-primary')}
     async function getWeather(){if(isOffline||!curPos.lat)return setText('weatherStatus',"오프라인");try{const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${curPos.lat}&longitude=${curPos.lng}&current_weather=true`);const json=await res.json();if(!json||!json.current_weather)return;const c=json.current_weather.weathercode;if(c<=3)setWeather('sun');else if(c>=71)setWeather('snow');else if(c>=51)setWeather('rain');else setWeather('cloud');setText('weatherStatus',"날씨적용")}catch(e){}}
     function getKORDay(dStr){const g=new Date(dStr).getDay();return isNaN(g)?'?':['일','월','화','수','목','금','토'][g]}
