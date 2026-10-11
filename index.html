@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Delivery Master V60.8</title>
+<title>Delivery Master V60.9</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#09090b">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -44,7 +44,7 @@ html{overflow:hidden;height:100%;overscroll-behavior:none}body{background-color:
 
 <div id="archDetailModal" class="modal-overlay"><div class="bg-[#18181b] w-[90%] max-w-sm rounded-2xl border border-gray-800 p-5 shadow-2xl h-[75vh] flex flex-col"><h3 class="text-lg font-bold text-white mb-1 flex justify-between items-center"><span id="archDetailTitle">상세 내역</span><button onclick="closeArchDetail()" class="text-gray-500"><i class="fas fa-times"></i></button></h3><div id="archDetailSummary" class="text-xs text-gray-400 mb-3 border-b border-gray-800 pb-2"></div><div id="archDetailList" class="flex-1 overflow-y-auto space-y-2 mb-3 pr-1"></div><button onclick="editFromDetail()" class="w-full py-3 rounded-xl font-bold text-black bg-primary shrink-0"><i class="fas fa-pen mr-1"></i>이 날짜 수정</button></div></div>
 
-<header class="glass w-full px-5 py-3 shadow-lg shrink-0 z-50 pt-[calc(env(safe-area-inset-top)+12px)]"><div class="flex justify-between items-center mb-2"><h1 class="text-xl font-black italic tracking-tighter flex items-center select-none text-white" onclick="openGoalModal()"><i class="fas fa-cube text-primary mr-2"></i>MASTER <span class="text-xs font-normal text-muted ml-1 not-italic">V60.8</span></h1><div class="flex gap-2"><button onclick="openMissionModal()" class="h-8 px-3 text-xs font-bold border border-secondary rounded-lg text-muted hover:text-white flex items-center"><i class="fas fa-flag-checkered mr-1"></i><span id="missionBtnTxt">미션</span></button><button onclick="resetDay()" class="h-8 px-3 text-xs font-bold bg-red-900/10 text-red-500 border border-red-900/30 rounded-lg"><i class="fas fa-power-off"></i></button></div></div><div id="missionBox" class="hidden mb-3 space-y-1.5"></div><div class="flex justify-between items-center mb-1 px-1 text-[10px] text-gray-500 font-mono"><div>매출 <span id="uiGrossRaw">0</span></div><div>유류(참고) <span id="uiFuelRaw" class="text-yellow-600">0</span></div><div>지출 <span id="uiExpRaw" class="text-red-500">0</span></div></div><div class="grid grid-cols-2 gap-3"><div class="lovable-card px-3 py-2 flex flex-col justify-center border-primary/30 bg-primary/5"><div class="text-[10px] font-bold text-primary leading-none mb-1">순수익(NET)</div><div class="text-2xl font-black text-white tracking-tight whitespace-nowrap leading-none"><span id="uiNet">0</span><span class="text-xs font-medium text-muted ml-1">원</span></div></div><div class="lovable-card px-3 py-2 flex flex-col justify-center"><div class="text-[10px] font-bold text-muted leading-none mb-1">배달건수</div><div class="text-2xl font-bold text-white tracking-tight whitespace-nowrap leading-none"><span id="uiCount">0</span><span class="text-xs text-muted ml-1">건</span></div></div></div></header>
+<header class="glass w-full px-5 py-3 shadow-lg shrink-0 z-50 pt-[calc(env(safe-area-inset-top)+12px)]"><div class="flex justify-between items-center mb-2"><h1 class="text-xl font-black italic tracking-tighter flex items-center select-none text-white" onclick="openGoalModal()"><i class="fas fa-cube text-primary mr-2"></i>MASTER <span class="text-xs font-normal text-muted ml-1 not-italic">V60.9</span></h1><div class="flex gap-2"><button onclick="openMissionModal()" class="h-8 px-3 text-xs font-bold border border-secondary rounded-lg text-muted hover:text-white flex items-center"><i class="fas fa-flag-checkered mr-1"></i><span id="missionBtnTxt">미션</span></button><button onclick="resetDay()" class="h-8 px-3 text-xs font-bold bg-red-900/10 text-red-500 border border-red-900/30 rounded-lg"><i class="fas fa-power-off"></i></button></div></div><div id="missionBox" class="hidden mb-3 space-y-1.5"></div><div class="flex justify-between items-center mb-1 px-1 text-[10px] text-gray-500 font-mono"><div>매출 <span id="uiGrossRaw">0</span></div><div>유류(참고) <span id="uiFuelRaw" class="text-yellow-600">0</span></div><div>지출 <span id="uiExpRaw" class="text-red-500">0</span></div></div><div class="grid grid-cols-2 gap-3"><div class="lovable-card px-3 py-2 flex flex-col justify-center border-primary/30 bg-primary/5"><div class="text-[10px] font-bold text-primary leading-none mb-1">순수익(NET)</div><div class="text-2xl font-black text-white tracking-tight whitespace-nowrap leading-none"><span id="uiNet">0</span><span class="text-xs font-medium text-muted ml-1">원</span></div></div><div class="lovable-card px-3 py-2 flex flex-col justify-center"><div class="text-[10px] font-bold text-muted leading-none mb-1">배달건수</div><div class="text-2xl font-bold text-white tracking-tight whitespace-nowrap leading-none"><span id="uiCount">0</span><span class="text-xs text-muted ml-1">건</span></div></div></div></header>
 
 <div id="mainScroll" class="bg-[#09090b] px-4 pt-4">
     <div id="p1" class="page active">
@@ -56,11 +56,27 @@ html{overflow:hidden;height:100%;overscroll-behavior:none}body{background-color:
                 <button onclick="toggleRun()" id="runBtn" class="bg-gray-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg">운행시작</button>
             </div>
             <div id="trackStats" class="grid grid-cols-3 gap-2 border-t border-gray-800 pt-3 hidden"><div class="text-center"><div class="text-[9px] text-gray-500">시간당수입</div><div class="text-sm font-bold text-white"><span id="valWage">0</span></div></div><div class="text-center border-l border-gray-800"><div class="text-[9px] text-gray-500">시간당건수</div><div class="text-sm font-bold text-primary"><span id="valPace">0.0</span></div></div><div class="text-center border-l border-gray-800 cursor-pointer" onclick="openGoalModal()"><div class="text-[9px] text-gray-500">일일목표</div><div class="text-sm font-bold text-green-500"><span id="valGoal">0</span>%</div></div></div>
-            <div id="coachBox" class="mt-3 pt-2 border-t border-gray-700">
-                <button type="button" onclick="setStrategy()" class="w-full py-2 flex justify-between items-center text-xs text-gray-300"><span>오늘 운행 목표 · <b id="uiTgtTime" class="text-white">21:00</b></span><span class="text-primary"><i class="fas fa-cog mr-1"></i>목표 설정</span></button>
-                <div id="strategyCountRow" class="mb-2"><div class="flex flex-wrap justify-between text-[11px] gap-2"><span>건수 <b id="uiTgtCnt"></b>건</span><span id="strategyCountProgress" class="text-gray-400"></span></div><div class="h-1.5 bg-gray-800 rounded-full mt-1 overflow-hidden"><div id="strategyCountBar" class="h-full bg-primary rounded-full" style="width:0%"></div></div></div>
-                <div id="strategyAmountRow" class="mb-2 hidden"><div class="flex flex-wrap justify-between text-[11px] gap-2"><span>매출 <b id="uiTgtAmt"></b>원</span><span id="strategyAmountProgress" class="text-gray-400"></span></div><div class="h-1.5 bg-gray-800 rounded-full mt-1 overflow-hidden"><div id="strategyAmountBar" class="h-full bg-green-500 rounded-full" style="width:0%"></div></div></div>
-                <div class="text-xs font-bold mt-1 text-center leading-relaxed" id="uiMsg"></div>
+            <div id="coachBox" class="mt-3 pt-3 border-t border-gray-700">
+                <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-2">
+                    <div><div class="text-xs font-bold text-white">오늘 운행 목표</div><div class="text-[11px] text-gray-400 mt-0.5">종료 <b id="uiTgtTime" class="font-medium">21:00</b></div></div>
+                    <button type="button" onclick="setStrategy()" class="min-h-[44px] px-3 rounded-xl bg-gray-800 text-xs font-bold text-primary border border-gray-700 active:bg-gray-700" aria-label="운행 목표 설정"><i class="fas fa-sliders mr-1" aria-hidden="true"></i>목표 설정</button>
+                </div>
+                <div id="strategyAmountRow" class="hidden rounded-xl bg-green-500/5 border border-green-500/20 p-3 mb-2">
+                    <div class="flex flex-wrap justify-between items-center gap-1 text-[11px]"><span class="text-gray-300">금액 목표 <b id="uiTgtAmt" class="text-white tabular-nums"></b>원</span><span id="strategyAmountPercent" class="font-bold text-green-400 tabular-nums"></span></div>
+                    <div class="flex flex-wrap justify-between items-end gap-x-3 gap-y-2 mt-3">
+                        <div class="min-w-0"><div class="text-[11px] text-gray-400">금액 목표까지</div><div id="strategyEstimate" class="text-2xl font-black text-green-400 leading-tight mt-1 tabular-nums break-words">계산 대기</div></div>
+                        <div><div class="text-[11px] text-gray-400">오늘 평균단가</div><div id="strategyAverage" class="text-base font-bold text-white mt-1 tabular-nums">—</div></div>
+                    </div>
+                    <div class="h-2 bg-black/40 rounded-full mt-3 overflow-hidden" role="progressbar" aria-label="금액 목표 달성률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="strategyAmountMeter"><div id="strategyAmountBar" class="h-full bg-green-500 rounded-full transition-[width] duration-300" style="width:0%"></div></div>
+                    <div id="strategyAmountProgress" class="text-[11px] text-gray-300 mt-2 leading-relaxed tabular-nums"></div>
+                    <div id="strategyEstimateNote" class="text-[10px] text-gray-400 mt-1 leading-relaxed"></div>
+                </div>
+                <div id="strategyCountRow" class="rounded-xl bg-black/20 border border-gray-800 p-3 mb-2">
+                    <div class="flex flex-wrap justify-between items-center gap-1 text-[11px]"><span class="text-gray-300">건수 목표 <b id="uiTgtCnt" class="text-white tabular-nums"></b>건</span><span id="strategyCountProgress" class="text-orange-300 tabular-nums"></span></div>
+                    <div class="h-1.5 bg-gray-800 rounded-full mt-2 overflow-hidden" role="progressbar" aria-label="건수 목표 달성률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="strategyCountMeter"><div id="strategyCountBar" class="h-full bg-primary rounded-full transition-[width] duration-300" style="width:0%"></div></div>
+                </div>
+                <div id="uiMsg" class="text-xs font-bold text-center leading-relaxed px-2 py-2"></div>
+                <div id="strategyActiveNote" class="hidden text-[11px] text-center text-gray-400 pb-1"></div>
             </div>
         </div>
         <div id="slotGrid" class="grid grid-cols-2 gap-3 pb-8"></div><div class="h-40 w-full"></div>
@@ -213,14 +229,17 @@ function render(){const realLogs=d.logs.filter(l=>typeof l.s==='number'||l.s===9
         save();updateRunUI();closeStrategy();toast('운행 목표 저장됨');
     }
     function strategyStats(logs,slots,run,now=Date.now()){
-        let count=0,amount=0,hourAmount=0;
+        let count=0,amount=0,hourAmount=0,deliveryAmount=0;
         const hour=new Date(now);hour.setMinutes(0,0,0);
         for(const log of logs){
             const won=Number(log.amt)||0;amount+=won;
-            if(typeof log.s==='number'){count++;if(log.ts>=hour.getTime()&&log.ts<=now)hourAmount+=won}
+            if(typeof log.s==='number'){count++;deliveryAmount+=won;if(log.ts>=hour.getTime()&&log.ts<=now)hourAmount+=won}
         }
         const remainingCount=run.tCnt>0?Math.max(0,run.tCnt-count):0,remainingAmount=run.tAmt>0?Math.max(0,run.tAmt-amount):0;
-        return {count,amount,hourAmount,active:slots.filter(s=>s>0).length,remainingCount,remainingAmount,
+        // Match the existing average fare: delivery records including manual count corrections, excluding bonuses.
+        const averageFare=count>0?deliveryAmount/count:0;
+        const estimatedRemaining=run.tAmt<=0?null:remainingAmount===0?0:averageFare>0?Math.ceil(remainingAmount*count/deliveryAmount):null;
+        return {count,amount,hourAmount,averageFare,estimatedRemaining,active:slots.filter(s=>s>0).length,remainingCount,remainingAmount,
             hours:run.tEnd?(run.tEnd-now)/3600000:null,
             achieved:(run.tCnt>0||run.tAmt>0)&&remainingCount===0&&remainingAmount===0};
     }
@@ -247,9 +266,17 @@ function render(){const realLogs=d.logs.filter(l=>typeof l.s==='number'||l.s===9
         setText('uiTgtTime',(end&&end.toDateString()!==new Date().toDateString()?(end.getMonth()+1)+'/'+end.getDate()+' ':'')+d.run.tTime);
         $('strategyCountRow').classList.toggle('hidden',!d.run.tCnt);$('strategyAmountRow').classList.toggle('hidden',!d.run.tAmt);
         setText('strategyCountProgress',stats.count+'건 완료 · '+stats.remainingCount+'건 남음');
-        setText('strategyAmountProgress',stats.amount.toLocaleString()+'원 · '+stats.remainingAmount.toLocaleString()+'원 남음');
+        setText('strategyAmountProgress',stats.amount.toLocaleString()+'원 달성 · '+stats.remainingAmount.toLocaleString()+'원 남음');
+        setText('strategyAverage',stats.averageFare>0?Math.round(stats.averageFare).toLocaleString()+'원':'—');
+        setText('strategyEstimate',stats.estimatedRemaining===0?'금액 목표 달성!':stats.estimatedRemaining!==null?'약 '+stats.estimatedRemaining.toLocaleString()+'건 더':stats.count===0?'첫 배달을 기록해 주세요':'단가 계산 대기');
+        $('strategyEstimate').className=(stats.estimatedRemaining!==null&&stats.estimatedRemaining>0?'text-2xl':'text-lg')+' font-black text-green-400 leading-tight mt-1 tabular-nums break-words';
+        setText('strategyEstimateNote',stats.estimatedRemaining===0?'오늘 매출 기준으로 금액 목표를 달성했어요.':stats.estimatedRemaining!==null?'완료 '+stats.count.toLocaleString()+'건 평균 기준 · 보너스 제외 · 실제 단가에 따라 달라져요':'완료 배달의 평균단가가 생기면 남은 건수를 계산해요.');
         const pct=(value,target)=>target>0?Math.max(0,Math.min(100,value/target*100)):0;
-        $('strategyCountBar').style.width=pct(stats.count,d.run.tCnt)+'%';$('strategyAmountBar').style.width=pct(stats.amount,d.run.tAmt)+'%';
+        const countPct=pct(stats.count,d.run.tCnt),amountPct=pct(stats.amount,d.run.tAmt);
+        $('strategyCountBar').style.width=countPct+'%';$('strategyAmountBar').style.width=amountPct+'%';
+        $('strategyCountMeter').setAttribute('aria-valuenow',Math.round(countPct));
+        $('strategyAmountMeter').setAttribute('aria-valuenow',Math.round(amountPct));
+        setText('strategyAmountPercent',Math.round(amountPct)+'%');
         let msg='',color='text-gray-400';
         if(stats.achieved){msg='목표 달성 완료!';color='text-green-500'}
         else if(!d.run.tCnt&&!d.run.tAmt){msg='목표를 설정해 주세요'}
@@ -262,8 +289,9 @@ function render(){const realLogs=d.logs.filter(l=>typeof l.s==='number'||l.s===9
             msg='시간당 '+parts.join(' · ')+' 필요';
             color=stats.remainingCount/stats.hours>5?'text-red-400':'text-green-400';
         }
-        if(stats.active>0)msg+=' · 배달 중 '+stats.active+'건 (완료 후 반영)';
-        setText('uiMsg',msg);$('uiMsg').className='text-xs font-bold mt-1 text-center leading-relaxed '+color;
+        $('strategyActiveNote').classList.toggle('hidden',stats.active===0);
+        setText('strategyActiveNote',stats.active>0?'배달 중 '+stats.active+'건 · 완료하면 목표와 예상 건수에 반영돼요':'');
+        setText('uiMsg',msg);$('uiMsg').className='text-xs font-bold text-center leading-relaxed px-2 py-2 '+color;
         setText('valWage',stats.hourAmount.toLocaleString());
         const hours=workedHours();setText('valPace',hours>0.05?(stats.count/hours).toFixed(1):'0.0');
         setText('valGoal',Math.round(pct(stats.amount,(d.goals.day||0)*10000)));
