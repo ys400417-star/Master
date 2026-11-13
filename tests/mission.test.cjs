@@ -8,7 +8,7 @@ const source=html.slice(html.indexOf('    function missionEvaluation('),html.ind
 const start=Date.UTC(2026,10,13,8),end=start+3*3600000;
 const mission={id:42,startTs:start,endTs:end,createdTs:start+600000,tgt:2,rwd:30000};
 function setup(logs=[],slots=[]){
- const d={logs,arch:[],slots:slots.map(()=>2),slotTs:slots,missions:[{...mission}],doneMissions:[]};
+ const d={date:new Date(start).toDateString(),logs,arch:[],slots:slots.map(()=>2),slotTs:slots,missions:[{...mission}],doneMissions:[]};
  const ctx={d,Date,confirm:()=>true,toast:()=>{},save:()=>{},render:()=>{},renderMissionList:()=>{},updateMissionUI:()=>{}};
  vm.createContext(ctx);vm.runInContext(source,ctx);return ctx;
 }
@@ -35,15 +35,24 @@ test('archived deliveries stay eligible for overnight mission; duplicate id coun
  const c=setup([log(1,start)]);c.d.arch=[{logs:[log(1,start),log(2,end,end+60000)]}];
  assert.equal(c.getMissionProgress(mission),2);
 });
-test('no auto reward, explicit reward once, stale click and reload safe',()=>{
- const c=setup([log(1,start),log(2,start)]);c.checkMsn();assert.equal(c.d.doneMissions.length,0);
- c.claimMission(42);assert.equal(c.d.doneMissions.length,1);assert.equal(c.d.logs.filter(l=>l.isBonus).length,1);
- c.claimMission(42);assert.equal(c.d.logs.filter(l=>l.isBonus).length,1);
- c.d=JSON.parse(JSON.stringify(c.d));c.d.missions=[{...mission}];c.claimMission(42);assert.equal(c.d.logs.filter(l=>l.isBonus).length,1);
+test('automatic reward increases gross exactly once, including after reload',()=>{
+ const c=setup([log(1,start),log(2,start)]);c.checkMsn();assert.equal(c.d.doneMissions.length,1);
+ assert.equal(c.d.logs.reduce((n,l)=>n+l.amt,0),36000);
+ c.checkMsn();assert.equal(c.d.logs.filter(l=>l.isBonus).length,1);
+ c.d=JSON.parse(JSON.stringify(c.d));c.d.missions=[{...mission}];c.checkMsn();assert.equal(c.d.logs.filter(l=>l.isBonus).length,1);
 });
-test('pending deliveries cannot trigger rewards and cancellation changes nothing',()=>{
- const c=setup([log(1,start)],[start]);c.claimMission(42);assert.equal(c.d.doneMissions.length,0);
- c.d.logs.push(log(2,start));c.confirm=()=>false;c.claimMission(42);assert.equal(c.d.doneMissions.length,0);
+test('pending and excluded deliveries do not trigger rewards',()=>{
+ const c=setup([log(1,start)],[start]);c.checkMsn();assert.equal(c.d.doneMissions.length,0);
+ c.d.logs.push(log(2,start));c.d.missions[0].excludedLogIds=[2];c.checkMsn();assert.equal(c.d.doneMissions.length,0);
+});
+test('late reward belongs to achievement day archive, not current day',()=>{
+ const c=setup();c.d.date=new Date(end+86400000).toDateString();c.d.arch=[{date:new Date(start).toDateString(),inc:6000,logs:[log(1,start),log(2,start)]}];
+ c.checkMsn();assert.equal(c.d.logs.length,0);assert.equal(c.d.arch[0].inc,36000);
+ c.checkMsn();assert.equal(c.d.arch[0].inc,36000);
+});
+test('points mission automatically pays only after completed points reach target',()=>{
+ const c=setup([log(1,start,start+1000,1.25)]);c.d.missions[0].type='points';c.checkMsn();assert.equal(c.d.doneMissions.length,0);
+ c.d.logs.push(log(2,start,start+2000,0.75));c.checkMsn();assert.equal(c.d.doneMissions.length,1);
 });
 test('explicit exclusion is mission-specific, reversible and preserves delivery data',()=>{
  const c=setup([log(1,start),log(2,start)]);const original=JSON.stringify(c.d.logs);
