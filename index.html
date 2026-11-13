@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Delivery Master V60.17</title>
+<title>Delivery Master V60.18</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#09090b">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -212,7 +212,7 @@ body{padding:0;touch-action:auto}
 
 <div id="archDetailModal" class="modal-overlay"><div class="bg-[#18181b] w-[90%] max-w-sm rounded-2xl border border-gray-800 p-5 shadow-2xl h-[75vh] flex flex-col"><h3 class="text-lg font-bold text-white mb-1 flex justify-between items-center"><span id="archDetailTitle">상세 내역</span><button onclick="closeArchDetail()" class="text-gray-500"><i class="fas fa-times"></i></button></h3><div id="archDetailSummary" class="text-xs text-gray-400 mb-3 border-b border-gray-800 pb-2"></div><div id="archDetailList" class="flex-1 overflow-y-auto space-y-2 mb-3 pr-1"></div><button onclick="editFromDetail()" class="w-full py-3 rounded-xl font-bold text-black bg-primary shrink-0"><i class="fas fa-pen mr-1"></i>이 날짜 수정</button></div></div>
 
-<header id="appHeader" class="glass app-header"><h1 class="font-black italic text-white flex items-center gap-1.5"><i class="fas fa-cube text-primary" aria-hidden="true"></i>MASTER <span class="text-[10px] font-normal text-muted not-italic">V60.17</span></h1><button type="button" onclick="openMissionModal()" class="header-mission text-xs font-bold text-gray-300"><i class="fas fa-flag-checkered mr-1" aria-hidden="true"></i><span id="missionBtnTxt">미션</span></button></header>
+<header id="appHeader" class="glass app-header"><h1 class="font-black italic text-white flex items-center gap-1.5"><i class="fas fa-cube text-primary" aria-hidden="true"></i>MASTER <span class="text-[10px] font-normal text-muted not-italic">V60.18</span></h1><button type="button" onclick="openMissionModal()" class="header-mission text-xs font-bold text-gray-300"><i class="fas fa-flag-checkered mr-1" aria-hidden="true"></i><span id="missionBtnTxt">미션</span></button></header>
 
 <div id="mainScroll" class="bg-[#09090b]">
     <div id="p1" class="page active" aria-label="배차">
@@ -575,7 +575,8 @@ function renderLogLists(inc){const bonusInc=d.logs.filter(l=>l.s==='🎁').reduc
             // Show the mission day's records and any delivery accepted in its window.
             const dayStart=new Date(m.startTs);dayStart.setHours(0,0,0,0);
             if(!(known&&accepted>=m.startTs&&accepted<=m.endTs)&&!(completed>=dayStart.getTime()&&completed<=Math.max(m.endTs,dayStart.getTime()+86400000)))continue;
-            const reason=!known?'수락 시각 없음':accepted<m.startTs?'시작 전 수락':accepted>m.endTs?'종료 후 수락':!Number.isFinite(completed)||completed<accepted?'완료 시각 확인 필요':'포함';
+            const excluded=Array.isArray(m.excludedLogIds)&&m.excludedLogIds.includes(l.id);
+            const reason=excluded?'사용자 확인으로 제외':!known?'수락 시각 없음':accepted<m.startTs?'시작 전 수락':accepted>m.endTs?'종료 후 수락':!Number.isFinite(completed)||completed<accepted?'완료 시각 확인 필요':'포함';
             const points=Number.isFinite(l.points)&&l.points>=0?l.points:0;
             rows.push({log:l,reason,included:reason==='포함',points});
         }
@@ -591,8 +592,17 @@ function renderLogLists(inc){const bonusInc=d.logs.filter(l=>l.s==='🎁').reduc
         return '<p class="mission-timing">완료 '+result.completed+'건 · 배달 중 '+result.pending+'건 (달성 수치 제외)</p><details class="mission-timing"><summary style="cursor:pointer;min-height:44px;padding-top:10px">집계 내역 · 수락 시각 확인</summary>'+result.rows.sort((a,b)=>(a.log.dispatchTs||a.log.ts)-(b.log.dispatchTs||b.log.ts)).map(r=>{
             const id=Number(r.log.id);
             const edit=Number.isSafeInteger(id)?'<button type="button" onclick="editMissionAcceptance('+id+')" style="min-height:44px;text-decoration:underline;background:#27272a;color:#fafafa;border:1px solid #52525b;border-radius:8px;padding:0 10px">수락 시각 수정</button>':'';
-            return '<div style="padding:8px 0;border-top:1px solid #3f3f46">'+r.reason+' · '+Number(r.log.amt||0).toLocaleString()+'원'+(m.type==='points'?' · '+r.points+'P':'')+'<br>수락 '+stamp(r.log.dispatchTs)+'<br>완료 '+stamp(r.log.ts)+'<br>'+edit+'</div>';
+            return '<div style="padding:8px 0;border-top:1px solid #3f3f46">'+r.reason+' · '+Number(r.log.amt||0).toLocaleString()+'원'+(m.type==='points'?' · '+r.points+'P':'')+'<br>수락 '+stamp(r.log.dispatchTs)+'<br>완료 '+stamp(r.log.ts)+'<br>'+edit+(Number.isSafeInteger(id)?'<button type="button" onclick="toggleMissionExclusion('+Number(m.id)+','+id+')" style="min-height:44px;margin-left:6px;background:#27272a;color:#fafafa;border:1px solid #52525b;border-radius:8px;padding:0 10px">'+(Array.isArray(m.excludedLogIds)&&m.excludedLogIds.includes(r.log.id)?'제외 취소':'이 미션에서 제외')+'</button>':'')+'</div>';
         }).join('')+(result.rows.length?'':'확인할 완료 기록이 없습니다.')+'</details>';
+    }
+    function toggleMissionExclusion(missionId,logId){
+        const m=d.missions.find(x=>x.id===missionId);
+        if(!m||!missionEvaluation(m).rows.some(r=>r.log.id===logId))return;
+        const ids=Array.isArray(m.excludedLogIds)?m.excludedLogIds:[];
+        const excluded=ids.includes(logId);
+        if(!confirm(excluded?'이 배달의 제외를 취소하고 수락 시각 기준으로 다시 계산할까요?':'실제로 미션 대상이 아닌 배달인가요? 이 미션에서만 제외하며 배달 기록과 매출은 유지합니다.'))return;
+        m.excludedLogIds=excluded?ids.filter(id=>id!==logId):[...ids,logId];
+        save();render();renderMissionList();toast(excluded?'제외 취소됨':'이 미션에서 제외됨');
     }
     function editMissionAcceptance(id){
         const log=d.logs.find(l=>l.id===id)||d.arch.flatMap(a=>a.logs||[]).find(l=>l.id===id);

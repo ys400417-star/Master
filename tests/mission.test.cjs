@@ -45,3 +45,11 @@ test('pending deliveries cannot trigger rewards and cancellation changes nothing
  const c=setup([log(1,start)],[start]);c.claimMission(42);assert.equal(c.d.doneMissions.length,0);
  c.d.logs.push(log(2,start));c.confirm=()=>false;c.claimMission(42);assert.equal(c.d.doneMissions.length,0);
 });
+test('explicit exclusion is mission-specific, reversible and preserves delivery data',()=>{
+ const c=setup([log(1,start),log(2,start)]);const original=JSON.stringify(c.d.logs);
+ c.toggleMissionExclusion(42,1);assert.equal(c.getMissionProgress(c.d.missions[0]),1);
+ assert.equal(c.getMissionProgress({...mission,id:43}),2);
+ assert.equal(JSON.stringify(c.d.logs),original);
+ c.d=JSON.parse(JSON.stringify(c.d));assert.equal(c.getMissionProgress(c.d.missions[0]),1);
+ c.toggleMissionExclusion(42,1);assert.equal(c.getMissionProgress(c.d.missions[0]),2);
+});
